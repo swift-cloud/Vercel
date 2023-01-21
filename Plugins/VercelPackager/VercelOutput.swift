@@ -191,22 +191,32 @@ extension VercelOutput {
 extension VercelOutput {
 
     public func buildProduct(_ product: Product) throws -> Path {
-        return try buildNativeProduct(product)
+        if Utils.isAmazonLinux {
+            return try buildNativeProduct(product)
+        } else {
+            return try buildDockerProduct(product)
+        }
     }
 
     private func buildNativeProduct(_ product: Product) throws -> Path {
-        print("building \"\(product.name)\"")
+        print("-------------------------------------------------------------------------")
+        print("Building product: \"\(product.name)\"")
+        print("-------------------------------------------------------------------------")
+
         var parameters = PackageManager.BuildParameters()
         parameters.configuration = .release
-        parameters.otherSwiftcFlags = Utils.isAmazonLinux ? ["-static-stdlib"] : []
+        parameters.otherSwiftcFlags = ["-static-stdlib"]
         parameters.logging = .concise
+
         let result = try packageManager.build(
             .product(product.name),
             parameters: parameters
         )
+
         guard let artifact = result.executableArtifact(for: product) else {
             throw BuildError.productExecutableNotFound(product.name)
         }
+
         return artifact.path
     }
 
@@ -215,7 +225,7 @@ extension VercelOutput {
         let baseImage = "swift:5.7-amazonlinux2"
 
         print("-------------------------------------------------------------------------")
-        print("building \"\(product.name)\" in docker")
+        print("Building product: \"\(product.name)\"")
         print("-------------------------------------------------------------------------")
 
         // update the underlying docker image, if necessary
@@ -237,7 +247,6 @@ extension VercelOutput {
             throw BuildError.failedParsingDockerOutput(dockerBuildOutputPath)
         }
         let buildOutputPath = Path(buildPathOutput.replacingOccurrences(of: "/workspace", with: context.package.directory.string))
-        print("building \"\(product.name)\"")
         let buildCommand = "swift build -c release --product \(product.name) --static-swift-stdlib"
         try Shell.execute(
             executable: dockerToolPath,
