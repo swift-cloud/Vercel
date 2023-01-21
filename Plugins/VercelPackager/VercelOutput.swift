@@ -47,6 +47,7 @@ public struct VercelOutput {
         if arguments.contains("--prod") {
             deployArguments.append("--prod")
         }
+
         try Shell.execute(
             executable: context.tool(named: "vercel").path,
             arguments: deployArguments

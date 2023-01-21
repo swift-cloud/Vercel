@@ -20,7 +20,7 @@ public enum HTTPMethod: String, CaseIterable, Sendable, Codable {
 
 public typealias HTTPHeaders = [String: HTTPHeaderValue]
 
-public struct HTTPHeaderValue: Decodable, Sendable {
+public struct HTTPHeaderValue: Codable, Sendable {
 
     public let values: [String]
 
@@ -39,6 +39,11 @@ public struct HTTPHeaderValue: Decodable, Sendable {
             return
         }
         throw DecodingError.dataCorruptedError(in: container, debugDescription: "Failed to decode HTTP header value")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(value)
     }
 }
 
