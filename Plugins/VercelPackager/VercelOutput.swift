@@ -37,7 +37,7 @@ public struct VercelOutput {
     }
 
     public func build() throws {
-        for product in context.package.products {
+        for product in deployableProducts {
             let artifactPath = try buildProduct(product)
             let bootstrapPath = vercelFunctionDirectory(product).appending("bootstrap")
             try FileManager.default.copyItem(atPath: artifactPath.string, toPath: bootstrapPath.string)
@@ -64,6 +64,30 @@ public struct VercelOutput {
             executable: context.tool(named: "vercel").path,
             arguments: deployArguments
         )
+    }
+}
+
+// MARK: - Products
+
+extension VercelOutput {
+
+    public var deployableProducts: [Product] {
+        context.package.products.filter { product in
+            let target = product.targets.first(where: hasVercelDependency)
+            return target != nil
+        }
+    }
+
+    private func hasVercelDependency(_ target: Target) -> Bool {
+        let dependency = target.dependencies.first { dep in
+            switch dep {
+            case .product(let product):
+                return product.name == "Vercel"
+            default:
+                return false
+            }
+        }
+        return dependency != nil
     }
 }
 
@@ -97,7 +121,7 @@ extension VercelOutput {
         try FileManager.default.createDirectory(atPath: vercelOutputDirectory.string, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(atPath: vercelFunctionsDirectory.string, withIntermediateDirectories: true)
         // Create directories for each product
-        for product in context.package.products {
+        for product in deployableProducts {
             try FileManager.default.createDirectory(atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
         }
     }
@@ -179,14 +203,15 @@ extension VercelOutput {
     }
 
     public func writeOutputConfiguration() throws {
-        let config = OutputConfiguration(routes: [
+        let routes: [OutputConfiguration.Route] = [
             // Remove trailing slash
             .init(src: "^/(.*)/$", headers: ["Location": "/$1"], status: 308),
             // Handle filesystem
             .init(handle: "filesystem"),
             // Proxy all other routes
-            .init(src: "^(?:/(.*))$", dest: context.package.products[0].name, check: true)
-        ])
+            .init(src: "^(?:/(.*))$", dest: deployableProducts[0].name, check: true)
+        ]
+        let config = OutputConfiguration(routes: routes)
         let data = try encoder.encode(config)
         FileManager.default.createFile(atPath: vercelOutputConfigurationPath.string, contents: data)
     }
@@ -207,7 +232,7 @@ extension VercelOutput {
     }
 
     public func writeFunctionConfigurations() throws {
-        for product in context.package.products {
+        for product in deployableProducts {
             let config = FunctionConfiguration()
             let data = try encoder.encode(config)
             FileManager.default.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
