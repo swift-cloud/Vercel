@@ -41,11 +41,16 @@ public struct VercelOutput {
         var deployArguments = [
             "--cwd", context.pluginWorkDirectory.string,
             "deploy",
-            "--prebuilt",
-            "--token", token
+            "--prebuilt"
         ]
+
         if arguments.contains("--prod") {
             deployArguments.append("--prod")
+        }
+
+        if localProjectConfiguration() == nil {
+            deployArguments.append("--token")
+            deployArguments.append(token)
         }
 
         try Shell.execute(
@@ -105,9 +110,20 @@ extension VercelOutput {
     }
 
     public func writeProjectConfiguration() throws {
-        let config = ProjectConfiguration(orgId: orgId, projectId: projectId)
+        let config = localProjectConfiguration() ?? ProjectConfiguration(orgId: orgId, projectId: projectId)
         let data = try JSONEncoder().encode(config)
         FileManager.default.createFile(atPath: vercelProjectConfigurationPath.string, contents: data)
+    }
+
+    public func localProjectConfiguration() -> ProjectConfiguration? {
+        let localPath = context.package.directory.appending(".vercel").appending("project.json")
+        guard let data = FileManager.default.contents(atPath: localPath.string) else {
+            return nil
+        }
+        guard let config = try? JSONDecoder().decode(ProjectConfiguration.self, from: data) else {
+            return nil
+        }
+        return config
     }
 }
 
@@ -241,7 +257,7 @@ extension VercelOutput {
         let dockerBuildOutputPath = try Shell.execute(
             executable: dockerToolPath,
             arguments: ["run", "--rm", "-v", "\(context.package.directory.string):/workspace", "-w", "/workspace", baseImage, "bash", "-cl", buildOutputPathCommand],
-            logLevel: .debug
+            logLevel: .output
         )
         guard let buildPathOutput = dockerBuildOutputPath.split(separator: "\n").last else {
             throw BuildError.failedParsingDockerOutput(dockerBuildOutputPath)
@@ -251,7 +267,7 @@ extension VercelOutput {
         try Shell.execute(
             executable: dockerToolPath,
             arguments: ["run", "--platform", "linux/x86_64", "--rm", "-v", "\(context.package.directory.string):/workspace", "-w", "/workspace", baseImage, "bash", "-cl", buildCommand],
-            logLevel: .debug
+            logLevel: .output
         )
         let productPath = buildOutputPath.appending(product.name)
         guard FileManager.default.fileExists(atPath: productPath.string) else {
