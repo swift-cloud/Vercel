@@ -24,6 +24,7 @@ public struct VercelOutput {
 
     public func prepare() throws {
         try createDirectoryStructure()
+        try copyStaticContent()
         try writeProjectConfiguration()
         try writeOutputConfiguration()
         try writeFunctionConfigurations()
@@ -93,6 +94,26 @@ extension VercelOutput {
         for product in context.package.products {
             try FileManager.default.createDirectory(atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
         }
+    }
+}
+
+// MARK: - static
+
+extension VercelOutput {
+
+    public var projectPublicDirectory: Path {
+        context.package.directory.appending("public")
+    }
+
+    public var vercelStaticDirectory: Path {
+        vercelOutputDirectory.appending("static")
+    }
+
+    public func copyStaticContent() throws {
+        guard FileManager.default.fileExists(atPath: projectPublicDirectory.string) else {
+            return
+        }
+        try FileManager.default.copyItem(atPath: projectPublicDirectory.string, toPath: vercelStaticDirectory.string)
     }
 }
 
