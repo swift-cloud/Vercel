@@ -18,7 +18,29 @@ public enum HTTPMethod: String, CaseIterable, Sendable, Codable {
     case QUERY
 }
 
-public typealias HTTPHeaders = [String: String?]
+public typealias HTTPHeaders = [String: HTTPHeaderValue]
+
+public struct HTTPHeaderValue: Decodable, Sendable {
+
+    public let values: [String]
+
+    public var value: String {
+        values[0]
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let values = try? container.decode([String].self) {
+            self.values = values
+            return
+        }
+        if let value = try? container.decode(String.self) {
+            self.values = [value]
+            return
+        }
+        throw DecodingError.dataCorruptedError(in: container, debugDescription: "Failed to decode HTTP header value")
+    }
+}
 
 public struct HTTPResponseStatus: Sendable {
     public let code: UInt
