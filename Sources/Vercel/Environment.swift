@@ -31,4 +31,10 @@ public struct Environment: Sendable {
 extension Environment {
 
     public static var edgeConfig = current["EDGE_CONFIG"]!
+
+    public static var vercelEnvironment = current["VERCEL_ENV"] ?? "dev"
+
+    public static var vercelHostname = current["VERCEL_URL"] ?? "localhost"
+
+    public static var vercelRegion = current["VERCEL_REGION"] ?? "dev1"
 }
