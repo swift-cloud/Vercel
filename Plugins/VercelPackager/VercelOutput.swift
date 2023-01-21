@@ -16,6 +16,12 @@ public struct VercelOutput {
 
     public let arguments: [String]
 
+    public var encoder: JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        return encoder
+    }
+
     public init(packageManager: PackagePlugin.PackageManager, context: PackagePlugin.PluginContext, arguments: [String]) {
         self.packageManager = packageManager
         self.context = context
@@ -132,7 +138,7 @@ extension VercelOutput {
 
     public func writeProjectConfiguration() throws {
         let config = localProjectConfiguration() ?? ProjectConfiguration(orgId: orgId, projectId: projectId)
-        let data = try JSONEncoder().encode(config)
+        let data = try encoder.encode(config)
         FileManager.default.createFile(atPath: vercelProjectConfigurationPath.string, contents: data)
     }
 
@@ -181,7 +187,7 @@ extension VercelOutput {
             // Proxy all other routes
             .init(src: "^(?:/(.*))$", dest: context.package.products[0].name, check: true)
         ])
-        let data = try JSONEncoder().encode(config)
+        let data = try encoder.encode(config)
         FileManager.default.createFile(atPath: vercelOutputConfigurationPath.string, contents: data)
     }
 }
@@ -203,7 +209,7 @@ extension VercelOutput {
     public func writeFunctionConfigurations() throws {
         for product in context.package.products {
             let config = FunctionConfiguration()
-            let data = try JSONEncoder().encode(config)
+            let data = try encoder.encode(config)
             FileManager.default.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
         }
     }
