@@ -156,6 +156,7 @@ extension VercelOutput {
         public struct Route: Codable {
             public var src: String
             public var dest: String
+            public var check: Bool = true
         }
         public var version: Int = 3
         public var routes: [Route]
