@@ -17,7 +17,27 @@ struct App: RequestHandler {
 }
 ```
 
+> Note: You can also add a top level `public` folder that will be deployed statically to Vercel's CDN.
+
 ## Deploy
+
+### Locally
+
+To deploy your project locally you need to install Docker and the Vercel CLI. Once installed you can you must link your Vercel project:
+
+```bash
+vercel link
+```
+
+After linking your project you can deploy it via Swift package manager:
+
+```bash
+swift package --disable-sandbox vercel
+```
+
+### GitHub Actions
+
+Use the following GitHub actions workflow to continuiously deploy your project to Vercel:
 
 ```yaml
 name: Vercel
