@@ -18,7 +18,7 @@ public enum HTTPMethod: String, CaseIterable, Sendable, Codable {
     case QUERY
 }
 
-public typealias HTTPHeaders = [String: String]
+public typealias HTTPHeaders = [String: String?]
 
 public struct HTTPResponseStatus: Sendable {
     public let code: UInt
