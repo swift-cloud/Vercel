@@ -154,9 +154,15 @@ extension VercelOutput {
 
     public struct OutputConfiguration: Codable {
         public struct Route: Codable {
-            public var src: String
-            public var dest: String
-            public var check: Bool = true
+            public var src: String? = nil
+            public var dest: String? = nil
+            public var headers: [String: String]? = nil
+            public var methods: [String]? = nil
+            public var `continue`: Bool? = nil
+            public var caseSensitive: Bool? = nil
+            public var check: Bool? = nil
+            public var status: Int? = nil
+            public var handle: String? = nil
         }
         public var version: Int = 3
         public var routes: [Route]
@@ -168,7 +174,12 @@ extension VercelOutput {
 
     public func writeOutputConfiguration() throws {
         let config = OutputConfiguration(routes: [
-            .init(src: "/(.*)", dest: context.package.products[0].name)
+            // Remove trailing slash
+            .init(src: "^/(.*)/$", headers: ["Location": "/$1"], status: 308),
+            // Handle filesystem
+            .init(handle: "filesystem"),
+            // Proxy all other routes
+            .init(src: "^(?:/(.*))$", dest: context.package.products[0].name, check: true)
         ])
         let data = try JSONEncoder().encode(config)
         FileManager.default.createFile(atPath: vercelOutputConfigurationPath.string, contents: data)
