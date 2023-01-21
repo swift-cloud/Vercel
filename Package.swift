@@ -15,13 +15,11 @@ let package = Package(
         .plugin(name: "VercelPackager", targets: ["VercelPackager"])
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", branch: "main"),
-        .package(url: "https://github.com/swift-server/swift-aws-lambda-events.git", branch: "main")
+        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", from: "1.0.0-alpha.1")
     ],
     targets: [
         .target(name: "Vercel", dependencies: [
-            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
-            .product(name: "AWSLambdaEvents", package: "swift-aws-lambda-events")
+            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime")
         ]),
         .plugin(name: "VercelPackager", capability: .command(
             intent: .custom(
