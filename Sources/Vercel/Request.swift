@@ -27,22 +27,30 @@ extension Request {
 extension Request {
 
     public var id: String {
-        headers["x-vercel-id"]?.value ?? "dev1:dev1::00000-0000000000000-000000000000"
+        header(.xVercelId) ?? "dev1:dev1::00000-0000000000000-000000000000"
     }
 
     public var host: String {
-        headers["host"]?.value ?? "localhost"
+        header(.host) ?? "localhost"
     }
 
     public var userAgent: String {
-        headers["user-agent"]?.value ?? "unknown"
+        header(.userAgent) ?? "unknown"
     }
 
     public var clientIPAddress: String {
-        headers["x-vercel-forwarded-for"]?.value ?? "127.0.0.1"
+        header(.xVercelForwardedFor) ?? "127.0.0.1"
     }
 
     public var url: URL {
         return .init(string: "https://\(host)\(path)")!
+    }
+
+    public func header(_ key: String) -> String? {
+        return headers[key]?.value
+    }
+
+    public func header(_ key: HTTPHeaderKey) -> String? {
+        return headers[key.rawValue]?.value
     }
 }

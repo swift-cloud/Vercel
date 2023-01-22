@@ -109,6 +109,8 @@ public enum HTTPHeaderKey: String, Sendable {
     case xCache = "x-cache"
     case xCacheHits = "x-cache-hits"
     case xCompressHint = "x-compress-hint"
+    case xVercelForwardedFor = "x-vercel-forwarded-for"
+    case xVercelId = "x-vercel-id"
 
     public var stringValue: String {
         rawValue
