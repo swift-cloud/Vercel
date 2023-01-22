@@ -76,15 +76,15 @@ public struct VercelOutput {
 extension VercelOutput {
 
     public var functionMemory: String {
-        argument("memory") ?? "1024"
+        argument("memory") ?? "512"
     }
 
     public var functionDuration: String {
         argument("duration") ?? "10"
     }
 
-    public var functionRegions: String {
-        argument("regions") ?? "iad1"
+    public var functionRegions: String? {
+        argument("regions")
     }
 
     public func argument(_ key: String) -> String? {
@@ -267,7 +267,7 @@ extension VercelOutput {
             let config = FunctionConfiguration(
                 memory: .init(functionMemory),
                 maxDuration: .init(functionDuration),
-                regions: functionRegions.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                regions: functionRegions?.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             )
             let data = try encoder.encode(config)
             fs.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
