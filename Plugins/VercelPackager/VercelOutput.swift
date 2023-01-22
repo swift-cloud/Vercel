@@ -139,10 +139,21 @@ extension VercelOutput {
         vercelFunctionsDirectory.appending("\(product.name).func")
     }
 
+    public var pluginGitDirectory: Path {
+        context.pluginWorkDirectory.appending(".git")
+    }
+
+    public var projectGitDirectory: Path {
+        context.package.directory.appending(".git")
+    }
+
     public func createDirectoryStructure() throws {
         // Clean the directory
-        if fs.fileExists(atPath: vercelDirectory.string) {
-            try fs.removeItem(atPath: vercelDirectory.string)
+        try? fs.removeItem(atPath: vercelDirectory.string)
+        // Copy git directory to populate vercel commits
+        if fs.fileExists(atPath: projectGitDirectory.string) {
+            try? fs.removeItem(atPath: pluginGitDirectory.string)
+            try fs.copyItem(atPath: projectGitDirectory.string, toPath: pluginGitDirectory.string)
         }
         // Create new directories
         try fs.createDirectory(atPath: vercelDirectory.string, withIntermediateDirectories: true)
