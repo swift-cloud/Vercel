@@ -89,6 +89,12 @@ After linking your project you can deploy it via Swift package manager:
 swift package --disable-sandbox vercel
 ```
 
+### Deploy Options
+
+```bash
+swift package --disable-sandbox vercel --product MyApp --memory 1024 --duration 60 --regions iad1,sfo1
+```
+
 ### GitHub Actions
 
 Use the following GitHub actions workflow to continuiously deploy your project to Vercel:
