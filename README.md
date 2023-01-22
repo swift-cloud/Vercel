@@ -2,7 +2,14 @@
 
 A Swift runtime and SDK for Vercel Serverless Functions.
 
-[swift-cloud/vercel-starter-kit](https://github.com/swift-cloud/vercel-starter-kit)
+[Vercel Starter Kit](https://github.com/swift-cloud/vercel-starter-kit)
+
+### How does this work?
+
+There's two important pieces to this package that make everything work:
+
+1. An SDK that wraps the [AWSLambdaRuntime](https://github.com/swift-server/swift-aws-lambda-runtime) and provides access to Vercel specific API like `EdgeConfig`
+2. A Swift Package Plugin which builds your code and produces a directory structure compliant with Vercel's [Build Output API](https://vercel.com/docs/build-output-api/v3)
 
 ## Usage
 
