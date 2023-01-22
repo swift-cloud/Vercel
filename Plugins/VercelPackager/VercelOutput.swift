@@ -75,6 +75,13 @@ public struct VercelOutput {
 
 extension VercelOutput {
 
+    public var product: Product {
+        if let name = argument("product") {
+            return deployableProducts.first { $0.name == name }!
+        }
+        return deployableProducts[0]
+    }
+
     public var functionMemory: String {
         argument("memory") ?? "512"
     }
@@ -248,7 +255,7 @@ extension VercelOutput {
             // Handle filesystem
             .init(handle: "filesystem"),
             // Proxy all other routes
-            .init(src: "^(?:/(.*))$", dest: deployableProducts[0].name, check: true)
+            .init(src: "^(?:/(.*))$", dest: product.name, check: true)
         ]
         let config = OutputConfiguration(routes: routes)
         let data = try encoder.encode(config)
