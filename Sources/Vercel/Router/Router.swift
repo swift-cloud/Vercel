@@ -103,6 +103,11 @@ extension Router {
             res = try await middlewareHandler(req, res)
         }
 
+        // Check if response was already sent
+        guard res.didSend == false else {
+            return res
+        }
+
         // Create mutable copy if the request
         var req = req
 

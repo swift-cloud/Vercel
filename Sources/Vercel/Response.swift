@@ -12,6 +12,10 @@ public struct Response: Codable, Sendable {
     public var isBase64Encoded: Bool?
     public var cookies: [String]?
 
+    public var didSend: Bool {
+        body != nil
+    }
+
     public init(
         statusCode: HTTPResponseStatus,
         headers: HTTPHeaders? = nil,
@@ -142,10 +146,10 @@ extension Response {
 
     public func send() -> Self {
         if body == nil {
-            return with(statusCode: .noContent)
+            return with(statusCode: .noContent, body: "")
         }
         if let body, body.isEmpty {
-            return with(statusCode: .noContent)
+            return with(statusCode: .noContent, body: "")
         }
         return self
     }

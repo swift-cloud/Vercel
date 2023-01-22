@@ -6,6 +6,8 @@ A Swift runtime and SDK for Vercel Serverless Functions.
 
 ## Usage
 
+### Request Handler
+
 ```swift
 import Vercel
 
@@ -19,7 +21,30 @@ struct App: RequestHandler {
 }
 ```
 
-> Note: You can also add a top level `public` folder that will be deployed statically to Vercel's CDN.
+### Express Handler
+
+```swift
+import Vercel
+
+@main
+struct App: ExpressHandler {
+
+    static let router = Router()
+        .get("/") { req, res in
+            res.status(.ok).send("Hello, Swift")
+        }
+        .get("/api/me") { req, res in
+            try res.cors().send(["name": "Andrew"])
+        }
+        .get("/hello/:name") { req, res in
+            res.send("Hello, " + req.pathParams["name"]!)
+        }
+}
+```
+
+### Static Files
+
+You can add a top level `public` folder that will be deployed statically to Vercel's CDN.
 
 ## Deploy
 
