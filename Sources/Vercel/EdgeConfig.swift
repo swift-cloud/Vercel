@@ -18,14 +18,8 @@ public struct EdgeConfig: Sendable {
     private let config: EmbeddedEdgeConfig
 
     public init(_ input: String) throws {
-        // Check for matching environment variable
-        let connection = Environment.current[input, default: input]
         // Parse id from url or input
-        let id = connection.components(separatedBy: "/").first { $0.hasPrefix(edgeConfigIdPrefix) }?.components(separatedBy: "?")[0]
-        // Ensure we have a valid id
-        guard let id = id else {
-            throw EdgeConfigError.invalidConnection
-        }
+        let id = try EdgeConfig.parseConfigID(input)
         // Read data from local file system
         guard let data = FileManager.default.contents(atPath: "/opt/edge-config/\(id).json") else {
             throw EdgeConfigError.embeddedConfigNotFound
@@ -59,6 +53,27 @@ extension EdgeConfig {
 
     public subscript(key: String, default value: String) -> String {
         return self.get(key, default: value)
+    }
+}
+
+extension EdgeConfig {
+
+    internal static func parseConfigID(_ input: String) throws -> String {
+        if input.hasPrefix(edgeConfigIdPrefix) {
+            return input
+        }
+        if input.hasPrefix("https://") {
+            let url = URL(string: input)!
+            let id = url.path.components(separatedBy: "/").first { $0.hasPrefix(edgeConfigIdPrefix) }
+            guard let id else {
+                throw EdgeConfigError.embeddedConfigNotFound
+            }
+            return id
+        }
+        if let value = Environment.current[input] {
+            return try parseConfigID(value)
+        }
+        throw EdgeConfigError.embeddedConfigNotFound
     }
 }
 
