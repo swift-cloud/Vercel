@@ -252,8 +252,8 @@ extension VercelOutput {
     public struct FunctionConfiguration: Codable {
         public var runtime: String = "provided.al2"
         public var handler: String = "bootstrap"
-        public var memory: String? = nil
-        public var maxDuration: String? = nil
+        public var memory: Int? = nil
+        public var maxDuration: Int? = nil
         public var regions: [String]? = nil
         public var supportsWrapper: Bool = false
     }
@@ -265,8 +265,8 @@ extension VercelOutput {
     public func writeFunctionConfigurations() throws {
         for product in deployableProducts {
             let config = FunctionConfiguration(
-                memory: functionMemory,
-                maxDuration: functionDuration,
+                memory: .init(functionMemory),
+                maxDuration: .init(functionDuration),
                 regions: functionRegions.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             )
             let data = try encoder.encode(config)
