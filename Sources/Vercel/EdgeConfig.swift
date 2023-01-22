@@ -73,7 +73,7 @@ extension EdgeConfig {
         if let value = Environment.current[input] {
             return try parseConfigID(value)
         }
-        throw EdgeConfigError.embeddedConfigNotFound
+        throw EdgeConfigError.invalidConnection
     }
 }
 
