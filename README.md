@@ -16,7 +16,7 @@ struct App: RequestHandler {
 
     func onRequest(_ req: Request, context: Context) async throws -> Response {
         let greeting = EdgeConfig.default["greeting"]
-        return .init(statusCode: .ok, body: "Hello, \(greeting)")
+        return .status(.ok).send("Hello, \(greeting)")
     }
 }
 ```

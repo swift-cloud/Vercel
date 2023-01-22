@@ -17,7 +17,7 @@ public struct Response: Codable, Sendable {
     }
 
     public init(
-        statusCode: HTTPResponseStatus,
+        statusCode: HTTPResponseStatus = .ok,
         headers: HTTPHeaders? = nil,
         body: String? = nil,
         isBase64Encoded: Bool? = nil,
@@ -44,6 +44,19 @@ public struct Response: Codable, Sendable {
             isBase64Encoded: isBase64Encoded ?? self.isBase64Encoded,
             cookies: cookies ?? self.cookies
         )
+    }
+}
+
+// MARK: - Static Init
+
+extension Response {
+
+    public static func status(_ statusCode: HTTPResponseStatus) -> Self {
+        return .init(statusCode: statusCode)
+    }
+
+    public static func status(_ statusCode: UInt) -> Self {
+        return .init(statusCode: .init(code: statusCode))
     }
 }
 
