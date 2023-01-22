@@ -15,7 +15,8 @@ public protocol RequestHandler: SimpleLambdaHandler {
 extension RequestHandler {
 
     public func handle(_ event: InvokeEvent, context: LambdaContext) async throws -> Response {
-        let req = try event.request()
+        let data = Data(event.body.utf8)
+        let req = try JSONDecoder().decode(Request.self, from: data)
         return try await onRequest(req, context: .init(context))
     }
 }

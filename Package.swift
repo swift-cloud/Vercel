@@ -24,7 +24,7 @@ let package = Package(
         .plugin(name: "VercelPackager", capability: .command(
             intent: .custom(
                 verb: "vercel",
-                description: "Archive the Swift binary and package for Vercel."
+                description: "Build and deploy your Swift application to Vercel"
             )
         )),
         .testTarget(name: "VercelTests", dependencies: [

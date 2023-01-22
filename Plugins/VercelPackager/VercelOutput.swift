@@ -16,9 +16,13 @@ public struct VercelOutput {
 
     public let arguments: [String]
 
+    public var fs: FileManager {
+        FileManager.default
+    }
+
     public var encoder: JSONEncoder {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .prettyPrinted
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         return encoder
     }
 
@@ -40,7 +44,7 @@ public struct VercelOutput {
         for product in deployableProducts {
             let artifactPath = try buildProduct(product)
             let bootstrapPath = vercelFunctionDirectory(product).appending("bootstrap")
-            try FileManager.default.copyItem(atPath: artifactPath.string, toPath: bootstrapPath.string)
+            try fs.copyItem(atPath: artifactPath.string, toPath: bootstrapPath.string)
         }
     }
 
@@ -64,6 +68,30 @@ public struct VercelOutput {
             executable: context.tool(named: "vercel").path,
             arguments: deployArguments
         )
+    }
+}
+
+// MARK: - Arguments
+
+extension VercelOutput {
+
+    public var functionMemory: String {
+        argument("memory") ?? "1024"
+    }
+
+    public var functionDuration: String {
+        argument("duration") ?? "60"
+    }
+
+    public var functionRegions: String {
+        argument("regions") ?? "iad1"
+    }
+
+    public func argument(_ key: String) -> String? {
+        guard let index = arguments.firstIndex(of: "--\(key)") else {
+            return nil
+        }
+        return arguments[index + 1]
     }
 }
 
@@ -113,16 +141,16 @@ extension VercelOutput {
 
     public func createDirectoryStructure() throws {
         // Clean the directory
-        if FileManager.default.fileExists(atPath: vercelDirectory.string) {
-            try FileManager.default.removeItem(atPath: vercelDirectory.string)
+        if fs.fileExists(atPath: vercelDirectory.string) {
+            try fs.removeItem(atPath: vercelDirectory.string)
         }
         // Create new directories
-        try FileManager.default.createDirectory(atPath: vercelDirectory.string, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(atPath: vercelOutputDirectory.string, withIntermediateDirectories: true)
-        try FileManager.default.createDirectory(atPath: vercelFunctionsDirectory.string, withIntermediateDirectories: true)
+        try fs.createDirectory(atPath: vercelDirectory.string, withIntermediateDirectories: true)
+        try fs.createDirectory(atPath: vercelOutputDirectory.string, withIntermediateDirectories: true)
+        try fs.createDirectory(atPath: vercelFunctionsDirectory.string, withIntermediateDirectories: true)
         // Create directories for each product
         for product in deployableProducts {
-            try FileManager.default.createDirectory(atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
+            try fs.createDirectory(atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
         }
     }
 }
@@ -140,10 +168,10 @@ extension VercelOutput {
     }
 
     public func copyStaticContent() throws {
-        guard FileManager.default.fileExists(atPath: projectPublicDirectory.string) else {
+        guard fs.fileExists(atPath: projectPublicDirectory.string) else {
             return
         }
-        try FileManager.default.copyItem(atPath: projectPublicDirectory.string, toPath: vercelStaticDirectory.string)
+        try fs.copyItem(atPath: projectPublicDirectory.string, toPath: vercelStaticDirectory.string)
     }
 }
 
@@ -163,12 +191,12 @@ extension VercelOutput {
     public func writeProjectConfiguration() throws {
         let config = localProjectConfiguration() ?? ProjectConfiguration(orgId: orgId, projectId: projectId)
         let data = try encoder.encode(config)
-        FileManager.default.createFile(atPath: vercelProjectConfigurationPath.string, contents: data)
+        fs.createFile(atPath: vercelProjectConfigurationPath.string, contents: data)
     }
 
     public func localProjectConfiguration() -> ProjectConfiguration? {
         let localPath = context.package.directory.appending(".vercel").appending("project.json")
-        guard let data = FileManager.default.contents(atPath: localPath.string) else {
+        guard let data = fs.contents(atPath: localPath.string) else {
             return nil
         }
         guard let config = try? JSONDecoder().decode(ProjectConfiguration.self, from: data) else {
@@ -213,7 +241,7 @@ extension VercelOutput {
         ]
         let config = OutputConfiguration(routes: routes)
         let data = try encoder.encode(config)
-        FileManager.default.createFile(atPath: vercelOutputConfigurationPath.string, contents: data)
+        fs.createFile(atPath: vercelOutputConfigurationPath.string, contents: data)
     }
 }
 
@@ -224,6 +252,9 @@ extension VercelOutput {
     public struct FunctionConfiguration: Codable {
         public var runtime: String = "provided.al2"
         public var handler: String = "bootstrap"
+        public var memory: String? = nil
+        public var maxDuration: String? = nil
+        public var regions: [String]? = nil
         public var supportsWrapper: Bool = false
     }
 
@@ -233,9 +264,13 @@ extension VercelOutput {
 
     public func writeFunctionConfigurations() throws {
         for product in deployableProducts {
-            let config = FunctionConfiguration()
+            let config = FunctionConfiguration(
+                memory: functionMemory,
+                maxDuration: functionDuration,
+                regions: functionRegions.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            )
             let data = try encoder.encode(config)
-            FileManager.default.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
+            fs.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
         }
     }
 }
@@ -327,14 +362,18 @@ extension VercelOutput {
             throw BuildError.failedParsingDockerOutput(dockerBuildOutputPath)
         }
         let buildOutputPath = Path(buildPathOutput.replacingOccurrences(of: "/workspace", with: context.package.directory.string))
+
+        // build the product
         let buildCommand = "swift build -c release --product \(product.name) --static-swift-stdlib"
         try Shell.execute(
             executable: dockerToolPath,
             arguments: ["run", "--platform", "linux/x86_64", "--rm", "-v", "\(context.package.directory.string):/workspace", "-w", "/workspace", baseImage, "bash", "-cl", buildCommand],
             logLevel: .output
         )
+
+        // ensure the final binary built correctly
         let productPath = buildOutputPath.appending(product.name)
-        guard FileManager.default.fileExists(atPath: productPath.string) else {
+        guard fs.fileExists(atPath: productPath.string) else {
             Diagnostics.error("expected '\(product.name)' binary at \"\(productPath.string)\"")
             throw BuildError.productExecutableNotFound(product.name)
         }

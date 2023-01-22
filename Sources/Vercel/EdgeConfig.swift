@@ -7,6 +7,8 @@
 
 import Foundation
 
+private let edgeConfigIdPrefix = "ecfg_"
+
 public struct EdgeConfig: Sendable {
 
     public static let `default` = try! EdgeConfig(Environment.edgeConfig)
@@ -15,19 +17,16 @@ public struct EdgeConfig: Sendable {
 
     private let config: EmbeddedEdgeConfig
 
-    public init(_ connection: String) throws {
-        guard let url = URLComponents(string: connection) else {
+    public init(_ input: String) throws {
+        // Check for matching environment variable
+        let connection = Environment.current[input, default: input]
+        // Parse id from url or input
+        let id = connection.components(separatedBy: "/").first { $0.hasPrefix(edgeConfigIdPrefix) }
+        // Ensure we have a valid id
+        guard let id = id else {
             throw EdgeConfigError.invalidConnection
         }
-        guard url.host == "edge-config.vercel.com" else {
-            throw EdgeConfigError.invalidConnection
-        }
-        guard url.path.starts(with: "/ecfg") else {
-            throw EdgeConfigError.invalidConnection
-        }
-        guard let id = url.path.components(separatedBy: "/").last else {
-            throw EdgeConfigError.invalidConnection
-        }
+        // Read data from local file system
         guard let data = FileManager.default.contents(atPath: "/opt/edge-config/\(id).json") else {
             throw EdgeConfigError.embeddedConfigNotFound
         }
@@ -37,6 +36,10 @@ public struct EdgeConfig: Sendable {
 }
 
 extension EdgeConfig {
+
+    public var digest: String {
+        config.digest
+    }
 
     public func get(_ key: String) -> String? {
         return config.items[key]

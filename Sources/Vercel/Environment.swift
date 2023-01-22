@@ -5,7 +5,7 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
-import AWSLambdaRuntime
+import Foundation
 
 public struct Environment: Sendable {
 
