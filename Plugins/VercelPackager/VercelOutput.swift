@@ -355,7 +355,15 @@ extension VercelOutput {
         let buildOutputPathCommand = "swift build -c release --show-bin-path"
         let dockerBuildOutputPath = try Shell.execute(
             executable: dockerToolPath,
-            arguments: ["run", "--platform", "linux/x86_64", "--rm", "-v", "\(context.package.directory.string):/workspace", "-w", "/workspace", baseImage, "bash", "-cl", buildOutputPathCommand],
+            arguments: [
+                "run",
+                "--platform", "linux/x86_64",
+                "--rm",
+                "-v", "\(context.package.directory.string):/workspace",
+                "-w", "/workspace",
+                baseImage,
+                "bash", "-cl", buildOutputPathCommand
+            ],
             logLevel: .output
         )
         guard let buildPathOutput = dockerBuildOutputPath.split(separator: "\n").last else {
@@ -367,7 +375,15 @@ extension VercelOutput {
         let buildCommand = "swift build -c release --product \(product.name) --static-swift-stdlib"
         try Shell.execute(
             executable: dockerToolPath,
-            arguments: ["run", "--platform", "linux/x86_64", "--rm", "-v", "\(context.package.directory.string):/workspace", "-w", "/workspace", baseImage, "bash", "-cl", buildCommand],
+            arguments: [
+                "run",
+                "--platform", "linux/x86_64",
+                "--rm",
+                "-v", "\(context.package.directory.string):/workspace",
+                "-w", "/workspace",
+                baseImage,
+                "bash", "-cl", buildCommand
+            ],
             logLevel: .output
         )
 
