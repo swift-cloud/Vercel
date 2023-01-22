@@ -20,21 +20,15 @@ public struct Shell {
         executable: Path,
         arguments: [String],
         customWorkingDirectory: Path? = .none,
-        logLevel: ProcessLogLevel = .debug
-    ) throws -> String {
+        logLevel: ProcessLogLevel = .output
+    ) async throws -> String {
         if logLevel >= .debug {
             print("\(executable.string) \(arguments.joined(separator: " "))")
         }
 
         var output = ""
-        let outputSync = DispatchGroup()
-        let outputQueue = DispatchQueue(label: "VercelPackagerShell.output")
+
         let outputHandler = { (data: Data?) in
-            dispatchPrecondition(condition: .onQueue(outputQueue))
-
-            outputSync.enter()
-            defer { outputSync.leave() }
-
             guard let _output = data.flatMap({ String(data: $0, encoding: .utf8)?.trimmingCharacters(in: CharacterSet(["\n"])) }), !_output.isEmpty else {
                 return
             }
@@ -52,7 +46,9 @@ public struct Shell {
         }
 
         let pipe = Pipe()
-        pipe.fileHandleForReading.readabilityHandler = { fileHandle in outputQueue.async { outputHandler(fileHandle.availableData) } }
+        pipe.fileHandleForReading.readabilityHandler = { fileHandle in
+            outputHandler(fileHandle.availableData)
+        }
 
         let process = Process()
         process.standardOutput = pipe
@@ -63,16 +59,14 @@ public struct Shell {
             process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory.string)
         }
         process.terminationHandler = { _ in
-            outputQueue.async {
-                outputHandler(try? pipe.fileHandleForReading.readToEnd())
-            }
+            outputHandler(try? pipe.fileHandleForReading.readToEnd())
         }
 
         try process.run()
-        process.waitUntilExit()
 
-        // wait for output to be full processed
-        outputSync.wait()
+        while process.isRunning {
+            try await Task.sleep(nanoseconds: 1_000_000_000)
+        }
 
         if process.terminationStatus != 0 {
             // print output on failure and if not already printed

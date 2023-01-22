@@ -12,8 +12,8 @@ import PackagePlugin
 struct VercelPackager: CommandPlugin {
     func performCommand(context: PackagePlugin.PluginContext, arguments: [String]) async throws {
         let vercelOutput = VercelOutput(packageManager: packageManager, context: context, arguments: arguments)
-        try vercelOutput.prepare()
-        try vercelOutput.build()
-        try vercelOutput.deploy()
+        try await vercelOutput.prepare()
+        try await vercelOutput.build()
+        try await vercelOutput.deploy()
     }
 }

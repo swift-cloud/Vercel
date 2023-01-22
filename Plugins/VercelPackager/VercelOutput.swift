@@ -32,7 +32,7 @@ public struct VercelOutput {
         self.arguments = arguments
     }
 
-    public func prepare() throws {
+    public func prepare() async throws {
         try createDirectoryStructure()
         try copyStaticContent()
         try writeProjectConfiguration()
@@ -40,15 +40,15 @@ public struct VercelOutput {
         try writeFunctionConfigurations()
     }
 
-    public func build() throws {
+    public func build() async throws {
         for product in deployableProducts {
-            let artifactPath = try buildProduct(product)
+            let artifactPath = try await buildProduct(product)
             let bootstrapPath = vercelFunctionDirectory(product).appending("bootstrap")
             try fs.copyItem(atPath: artifactPath.string, toPath: bootstrapPath.string)
         }
     }
 
-    public func deploy() throws {
+    public func deploy() async throws {
         var deployArguments = [
             "--cwd", context.pluginWorkDirectory.string,
             "deploy",
@@ -64,7 +64,7 @@ public struct VercelOutput {
             deployArguments.append(token)
         }
 
-        try Shell.execute(
+        try await Shell.execute(
             executable: context.tool(named: "vercel").path,
             arguments: deployArguments
         )
@@ -316,15 +316,15 @@ extension VercelOutput {
 
 extension VercelOutput {
 
-    public func buildProduct(_ product: Product) throws -> Path {
+    public func buildProduct(_ product: Product) async throws -> Path {
         if Utils.isAmazonLinux {
-            return try buildNativeProduct(product)
+            return try await buildNativeProduct(product)
         } else {
-            return try buildDockerProduct(product)
+            return try await buildDockerProduct(product)
         }
     }
 
-    private func buildNativeProduct(_ product: Product) throws -> Path {
+    private func buildNativeProduct(_ product: Product) async throws -> Path {
         print("-------------------------------------------------------------------------")
         print("Building product: \"\(product.name)\"")
         print("-------------------------------------------------------------------------")
@@ -346,7 +346,7 @@ extension VercelOutput {
         return artifact.path
     }
 
-    private func buildDockerProduct(_ product: Product) throws -> Path {
+    private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
         let baseImage = "swift:5.7-amazonlinux2"
 
@@ -356,7 +356,7 @@ extension VercelOutput {
 
         // update the underlying docker image, if necessary
         print("updating \"\(baseImage)\" docker image")
-        try Shell.execute(
+        try await Shell.execute(
             executable: dockerToolPath,
             arguments: ["pull", baseImage],
             logLevel: .output
@@ -364,7 +364,7 @@ extension VercelOutput {
 
         // get the build output path
         let buildOutputPathCommand = "swift build -c release --show-bin-path"
-        let dockerBuildOutputPath = try Shell.execute(
+        let dockerBuildOutputPath = try await Shell.execute(
             executable: dockerToolPath,
             arguments: [
                 "run",
@@ -384,7 +384,7 @@ extension VercelOutput {
 
         // build the product
         let buildCommand = "swift build -c release --product \(product.name) --static-swift-stdlib"
-        try Shell.execute(
+        try await Shell.execute(
             executable: dockerToolPath,
             arguments: [
                 "run",
