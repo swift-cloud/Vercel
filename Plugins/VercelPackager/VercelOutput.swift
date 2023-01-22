@@ -80,7 +80,7 @@ extension VercelOutput {
     }
 
     public var functionDuration: String {
-        argument("duration") ?? "60"
+        argument("duration") ?? "10"
     }
 
     public var functionRegions: String {
