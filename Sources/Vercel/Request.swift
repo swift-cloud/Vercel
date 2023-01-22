@@ -12,14 +12,14 @@ public struct Request: Codable, Sendable {
     public let body: String?
 
     /// Private instance var to prevent decodable from failing
-    private var _pathParams: Parameters? = .init()
+    internal var _pathParams: Parameters? = .init()
 }
 
 extension Request {
 
     /// `pathParams` will only be set when used with a `Router`
     public internal(set) var pathParams: Parameters {
-        get { _pathParams! }
+        get { _pathParams ?? .init() }
         set { _pathParams = newValue }
     }
 }
