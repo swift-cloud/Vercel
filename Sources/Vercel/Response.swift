@@ -103,6 +103,10 @@ extension Response {
         return header(.contentType, value)
     }
 
+    public func cacheControl(maxAge ttl: Int, staleWhileRevalidate swr: Int = 0) -> Self {
+        return header(.cacheControl, "s-maxage=\(ttl), stale-while-revalidate=\(swr)")
+    }
+
     fileprivate func defaultContentType(_ value: String) -> Self {
         guard header(.contentType) == nil else {
             return self
