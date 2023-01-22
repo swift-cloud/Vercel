@@ -45,6 +45,15 @@ extension FetchResponse {
         return try JSONSerialization.jsonObject(with: body) as! [Any]
     }
 
+    public func formValues() async throws -> [String: String] {
+        let query = String(data: body, encoding: .utf8)!
+        let components = URLComponents(string: "?\(query)")
+        let queryItems = components?.queryItems ?? []
+        return queryItems.reduce(into: [:]) { values, item in
+            values[item.name] = item.value
+        }
+    }
+
     public func text() async throws -> String {
         return String(data: body, encoding: .utf8)!
     }
