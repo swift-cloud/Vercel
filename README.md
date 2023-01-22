@@ -42,6 +42,14 @@ struct App: ExpressHandler {
 }
 ```
 
+### Data Fetching
+
+You can use any popular library to fetch data such as Alamofire of async-http-client but we also provide a convenient `fetch()` method directly in this package:
+
+```swift
+let obj = try await fetch("https://httpbin.org/json").json()
+```
+
 ### Static Files
 
 You can add a top level `public` folder that will be deployed statically to Vercel's CDN.
