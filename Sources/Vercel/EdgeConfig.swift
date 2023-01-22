@@ -21,7 +21,7 @@ public struct EdgeConfig: Sendable {
         // Check for matching environment variable
         let connection = Environment.current[input, default: input]
         // Parse id from url or input
-        let id = connection.components(separatedBy: "/").first { $0.hasPrefix(edgeConfigIdPrefix) }
+        let id = connection.components(separatedBy: "/").first { $0.hasPrefix(edgeConfigIdPrefix) }?.components(separatedBy: "?")[0]
         // Ensure we have a valid id
         guard let id = id else {
             throw EdgeConfigError.invalidConnection
