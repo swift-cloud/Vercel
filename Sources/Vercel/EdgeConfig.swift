@@ -15,7 +15,7 @@ public struct EdgeConfig: Sendable {
 
     public let id: String
 
-    private let config: EmbeddedEdgeConfig
+    private let config: [String: Sendable]
 
     public init(_ input: String) throws {
         // Parse id from url or input
@@ -25,34 +25,30 @@ public struct EdgeConfig: Sendable {
             throw EdgeConfigError.embeddedConfigNotFound
         }
         self.id = id
-        self.config = try JSONDecoder().decode(EmbeddedEdgeConfig.self, from: data)
+        self.config = try JSONSerialization.jsonObject(with: data) as! [String: Sendable]
     }
 }
 
 extension EdgeConfig {
 
     public var digest: String {
-        config.digest
+        config["digest"] as! String
     }
 
-    public func get(_ key: String) -> String? {
-        return config.items[key]
+    public var items: [String: Sendable] {
+        config["items"] as! [String: Sendable]
     }
 
-    public func get(_ key: String, default value: String) -> String {
-        return config.items[key, default: value]
+    public func get(_ key: String) -> Claim {
+        return .init(items[key])
     }
 
     public func has(_ key: String) -> Bool {
-        return config.items[key] != nil
+        return items[key] != nil
     }
 
-    public subscript(key: String) -> String? {
+    public subscript(key: String) -> Claim {
         return self.get(key)
-    }
-
-    public subscript(key: String, default value: String) -> String {
-        return self.get(key, default: value)
     }
 }
 
@@ -76,11 +72,6 @@ extension EdgeConfig {
         }
         throw EdgeConfigError.invalidConnection
     }
-}
-
-fileprivate struct EmbeddedEdgeConfig: Codable, Sendable {
-    let digest: String
-    let items: [String: String]
 }
 
 public enum EdgeConfigError: Error {

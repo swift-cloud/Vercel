@@ -22,7 +22,7 @@ import Vercel
 struct App: RequestHandler {
 
     func onRequest(_ req: Request, context: Context) async throws -> Response {
-        let greeting = EdgeConfig.default["greeting"]
+        let greeting = EdgeConfig.default.get("greeting").string!
         return .status(.ok).send("Hello, \(greeting)")
     }
 }
@@ -55,6 +55,18 @@ You can use any popular library to fetch data such as Alamofire of async-http-cl
 
 ```swift
 let obj = try await fetch("https://httpbin.org/json").json()
+```
+
+### Edge Config
+
+This package provides full access to Vercel's [Edge Config](https://vercel.com/docs/concepts/edge-network/edge-config) API. You can access the default edge config store or any additinoal store assigned to your project:
+
+```swift
+// Default edge config
+let str = EdgeConfig.default.get("some-string-key").string
+
+// Edge config assigned to an environment variable
+let num = EdgeConfig("EDGE_CONFIG_2").get("some-int-key").integer
 ```
 
 ### Static Files
