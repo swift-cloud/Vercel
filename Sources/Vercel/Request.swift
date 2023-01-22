@@ -10,6 +10,9 @@ public struct Request: Codable, Sendable {
     public let headers: HTTPHeaders
     public let path: String
     public let body: String?
+
+    /// `pathParams` will only be set when used with a `Router`
+    public internal(set) var pathParams: Parameters = .init()
 }
 
 extension Request {
@@ -28,5 +31,9 @@ extension Request {
 
     public var clientIPAddress: String {
         headers["x-vercel-forwarded-for"]?.value ?? "127.0.0.1"
+    }
+
+    public var url: URL {
+        return .init(string: "https://\(host)\(path)")!
     }
 }

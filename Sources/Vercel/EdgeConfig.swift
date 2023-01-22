@@ -63,9 +63,10 @@ extension EdgeConfig {
             return input
         }
         if input.hasPrefix("https://") {
-            let url = URL(string: input)!
-            let id = url.path.components(separatedBy: "/").first { $0.hasPrefix(edgeConfigIdPrefix) }
-            guard let id else {
+            guard let url = URL(string: input) else {
+                throw EdgeConfigError.embeddedConfigNotFound
+            }
+            guard let id = url.pathComponents.first(where: { $0.hasPrefix(edgeConfigIdPrefix) }) else {
                 throw EdgeConfigError.embeddedConfigNotFound
             }
             return id
