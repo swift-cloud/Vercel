@@ -1,6 +1,15 @@
 {
   "pins" : [
     {
+      "identity" : "crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/swift-cloud/Crypto",
+      "state" : {
+        "revision" : "defff250bbd79d81fb8ee53926360fc522d75bad",
+        "version" : "1.6.0"
+      }
+    },
+    {
       "identity" : "swift-atomics",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-atomics.git",
