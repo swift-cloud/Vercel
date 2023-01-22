@@ -60,10 +60,10 @@ extension EdgeConfig {
         }
         if input.hasPrefix("https://") {
             guard let url = URL(string: input) else {
-                throw EdgeConfigError.embeddedConfigNotFound
+                throw EdgeConfigError.invalidConnection
             }
             guard let id = url.pathComponents.first(where: { $0.hasPrefix(edgeConfigIdPrefix) }) else {
-                throw EdgeConfigError.embeddedConfigNotFound
+                throw EdgeConfigError.invalidConnection
             }
             return id
         }
