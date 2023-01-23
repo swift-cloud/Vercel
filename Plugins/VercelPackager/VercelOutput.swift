@@ -117,7 +117,7 @@ extension VercelOutput {
         let dependency = target.dependencies.first { dep in
             switch dep {
             case .product(let product):
-                return product.name == "Vercel"
+                return product.name.hasPrefix("Vercel")
             default:
                 return false
             }
