@@ -54,7 +54,7 @@ struct App: ExpressHandler {
 
 ### Data Fetching
 
-You can use any popular library to fetch data such as Alamofire of async-http-client but we also provide a convenient `fetch()` method directly in this package:
+You can use any popular library to fetch data such as Alamofire or async-http-client but we also provide a convenient `fetch()` method directly in this package:
 
 ```swift
 let obj = try await fetch("https://httpbin.org/json").json()
@@ -97,6 +97,11 @@ swift package --disable-sandbox vercel
 ```bash
 swift package --disable-sandbox vercel --product MyApp --memory 1024 --duration 60 --regions iad1,sfo1
 ```
+
+- `--product` - The product you want to deploy. Default: first target in Package.swift with the Vercel dependency
+- `--memory` - The amount of memory in megabytes to allocate to your function. Default 512mb
+- `--duration` - The maximum duration in seconds that your function will run. Default: 10s
+- `--regions` - Comma separated list of regions to deploy your function to. Default: iad1
 
 ### GitHub Actions
 
