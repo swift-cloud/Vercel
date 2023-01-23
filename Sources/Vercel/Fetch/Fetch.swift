@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  Fetch.swift
 //  
 //
 //  Created by Andrew Barba on 1/22/23.
@@ -12,12 +12,14 @@ import FoundationNetworking
 
 public enum FetchError: Error, Sendable {
     case invalidResponse
+    case invalidURL
+    case timeout
 }
 
 public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
     // Build url components from request url
     guard var urlComponents = URLComponents(string: request.url.absoluteString) else {
-        throw FetchRequestError.invalidURL
+        throw FetchError.invalidURL
     }
 
     // Set default scheme
@@ -36,7 +38,7 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
 
     // Parse final url
     guard let url = urlComponents.url else {
-        throw FetchRequestError.invalidURL
+        throw FetchError.invalidURL
     }
 
     // Set request resources
@@ -101,7 +103,7 @@ public func fetch(_ url: URL, _ options: FetchRequest.Options = .options()) asyn
 
 public func fetch(_ urlPath: String, _ options: FetchRequest.Options = .options()) async throws -> FetchResponse {
     guard let url = URL(string: urlPath) else {
-        throw FetchRequestError.invalidURL
+        throw FetchError.invalidURL
     }
     let request = FetchRequest(url, options)
     return try await fetch(request)

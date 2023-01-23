@@ -1,14 +1,9 @@
 //
-//  Fetch.swift
+//  FetchRequest.swift
 //  
 //
 //  Created by Andrew Barba on 1/22/23.
 //
-
-public enum FetchRequestError: Error, Sendable {
-    case invalidURL
-    case timeout
-}
 
 public struct FetchRequest: Sendable {
 
