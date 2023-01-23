@@ -10,6 +10,6 @@ final class ClaimTests: XCTestCase {
                 ]
             ]
         ])
-        XCTAssertEqual(claim["a"]["b"]["c"].integer, 100)
+        XCTAssertEqual(claim["a"]["b"]["c"].int, 100)
     }
 }

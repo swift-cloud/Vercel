@@ -69,7 +69,7 @@ This package provides full access to Vercel's [Edge Config](https://vercel.com/d
 let str = EdgeConfig.default.get("some-string-key").string
 
 // Edge config assigned to an environment variable
-let num = EdgeConfig("EDGE_CONFIG_2").get("some-int-key").integer
+let num = EdgeConfig("EDGE_CONFIG_2").get("some-int-key").int
 ```
 
 ### Static Files
