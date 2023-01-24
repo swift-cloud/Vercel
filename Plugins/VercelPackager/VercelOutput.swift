@@ -49,6 +49,12 @@ public struct VercelOutput {
     }
 
     public func deploy() async throws {
+        print("")
+        print("-------------------------------------------------------------------------")
+        print("Deploying to Vercel: \"\(product.name)\"")
+        print("-------------------------------------------------------------------------")
+        print("")
+
         var deployArguments = [
             "--cwd", context.pluginWorkDirectory.string,
             "deploy",
@@ -80,6 +86,14 @@ extension VercelOutput {
             return deployableProducts.first { $0.name == name }!
         }
         return deployableProducts[0]
+    }
+
+    public var isDeploy: Bool {
+        arguments.contains("--deploy")
+    }
+
+    public var isProduction: Bool {
+        arguments.contains("--prod")
     }
 
     public var functionMemory: String {
@@ -130,8 +144,12 @@ extension VercelOutput {
 
 extension VercelOutput {
 
+    public var projectDirectory: Path {
+        context.package.directory
+    }
+
     public var vercelDirectory: Path {
-        context.pluginWorkDirectory.appending(".vercel")
+        projectDirectory.appending(".vercel")
     }
 
     public var vercelOutputDirectory: Path {
@@ -146,24 +164,12 @@ extension VercelOutput {
         vercelFunctionsDirectory.appending("\(product.name).func")
     }
 
-    public var pluginGitDirectory: Path {
-        context.pluginWorkDirectory.appending(".git")
-    }
-
-    public var projectGitDirectory: Path {
-        context.package.directory.appending(".git")
-    }
-
     public func createDirectoryStructure() throws {
-        // Clean the directory
-        try? fs.removeItem(atPath: vercelDirectory.string)
-        // Copy git directory to populate vercel commits
-        if fs.fileExists(atPath: projectGitDirectory.string) {
-            try? fs.removeItem(atPath: pluginGitDirectory.string)
-            try fs.copyItem(atPath: projectGitDirectory.string, toPath: pluginGitDirectory.string)
-        }
+        // Ensure we have a top level vercel directory
+        try? fs.createDirectory(atPath: vercelDirectory.string, withIntermediateDirectories: true)
+        // Clean the vercel output directory
+        try? fs.removeItem(atPath: vercelOutputDirectory.string)
         // Create new directories
-        try fs.createDirectory(atPath: vercelDirectory.string, withIntermediateDirectories: true)
         try fs.createDirectory(atPath: vercelOutputDirectory.string, withIntermediateDirectories: true)
         try fs.createDirectory(atPath: vercelFunctionsDirectory.string, withIntermediateDirectories: true)
         // Create directories for each product
@@ -178,7 +184,7 @@ extension VercelOutput {
 extension VercelOutput {
 
     public var projectPublicDirectory: Path {
-        context.package.directory.appending("public")
+        projectDirectory.appending("public")
     }
 
     public var vercelStaticDirectory: Path {
@@ -213,8 +219,7 @@ extension VercelOutput {
     }
 
     public func localProjectConfiguration() -> ProjectConfiguration? {
-        let localPath = context.package.directory.appending(".vercel").appending("project.json")
-        guard let data = fs.contents(atPath: localPath.string) else {
+        guard let data = fs.contents(atPath: vercelProjectConfigurationPath.string) else {
             return nil
         }
         guard let config = try? JSONDecoder().decode(ProjectConfiguration.self, from: data) else {
@@ -324,21 +329,23 @@ extension VercelOutput {
 extension VercelOutput {
 
     public func buildProduct(_ product: Product) async throws -> Path {
-        if Utils.isAmazonLinux {
-            return try await buildNativeProduct(product)
-        } else {
+        print("")
+        print("-------------------------------------------------------------------------")
+        print("Building product: \"\(product.name)\"")
+        print("-------------------------------------------------------------------------")
+        print("")
+
+        if isDeploy, Utils.isAmazonLinux == false {
             return try await buildDockerProduct(product)
+        } else {
+            return try await buildNativeProduct(product)
         }
     }
 
     private func buildNativeProduct(_ product: Product) async throws -> Path {
-        print("-------------------------------------------------------------------------")
-        print("Building product: \"\(product.name)\"")
-        print("-------------------------------------------------------------------------")
-
         var parameters = PackageManager.BuildParameters()
         parameters.configuration = .release
-        parameters.otherSwiftcFlags = ["-static-stdlib"]
+        parameters.otherSwiftcFlags = Utils.isAmazonLinux ? ["-static-stdlib"] : []
         parameters.logging = .concise
 
         let result = try packageManager.build(
@@ -356,10 +363,6 @@ extension VercelOutput {
     private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
         let baseImage = "swift:5.7-amazonlinux2"
-
-        print("-------------------------------------------------------------------------")
-        print("Building product: \"\(product.name)\"")
-        print("-------------------------------------------------------------------------")
 
         // update the underlying docker image, if necessary
         print("updating \"\(baseImage)\" docker image")

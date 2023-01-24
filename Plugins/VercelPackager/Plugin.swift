@@ -14,6 +14,8 @@ struct VercelPackager: CommandPlugin {
         let vercelOutput = VercelOutput(packageManager: packageManager, context: context, arguments: arguments)
         try await vercelOutput.prepare()
         try await vercelOutput.build()
-        try await vercelOutput.deploy()
+        if vercelOutput.isDeploy {
+            try await vercelOutput.deploy()
+        }
     }
 }

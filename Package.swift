@@ -24,10 +24,11 @@ let package = Package(
             .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime")
         ]),
         .plugin(name: "VercelPackager", capability: .command(
-            intent: .custom(
-                verb: "vercel",
-                description: "Build and deploy your Swift application to Vercel"
-            )
+            intent: .custom(verb: "vercel", description: "Build and deploy your Swift application to Vercel")
+            // TODO: Add back explicit permission when SPM isn't so annoying about asking every run
+            // permissions: [
+            //     .writeToPackageDirectory(reason: "Produce .vercel/output folder compliant with the Vercel Build Output API"),
+            // ]
         )),
         .testTarget(name: "VercelTests", dependencies: [
             .byName(name: "Vercel")
