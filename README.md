@@ -7,6 +7,12 @@ A Swift runtime and SDK for Vercel Serverless Functions.
 
 [Vercel Starter Kit](https://github.com/swift-cloud/vercel-starter-kit)
 
+### Getting Started
+
+Check out the intoductory blog post for getting started:
+
+[Deploy server side Swift applications on Vercel](https://swift.cloud/blog/deploy-server-side-swift-applications-on-vercel)
+
 ### How does this work?
 
 There's two important pieces to this package that make everything work:
