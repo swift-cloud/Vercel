@@ -212,7 +212,10 @@ extension VercelOutput {
     }
 
     public func writeProjectConfiguration() throws {
-        let config = localProjectConfiguration() ?? ProjectConfiguration(orgId: vercelOrgID, projectId: vercelProjectID)
+        guard localProjectConfiguration() == nil else {
+            return
+        }
+        let config = ProjectConfiguration(orgId: vercelOrgID, projectId: vercelProjectID)
         let data = try encoder.encode(config)
         fs.createFile(atPath: vercelProjectConfigurationPath.string, contents: data)
     }
