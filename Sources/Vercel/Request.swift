@@ -13,7 +13,7 @@ public struct Request: Sendable {
     public let body: String?
 
     /// Private instance var to prevent decodable from failing
-    internal var pathParams: Parameters = .init()
+    public internal(set) var pathParams: Parameters = .init()
 
     internal init(_ payload: InvokeEvent.Payload) {
         self.method = payload.method
