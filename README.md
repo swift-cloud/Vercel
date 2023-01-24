@@ -62,7 +62,7 @@ let obj = try await fetch("https://httpbin.org/json").json()
 
 ### Edge Config
 
-This package provides full access to Vercel's [Edge Config](https://vercel.com/docs/concepts/edge-network/edge-config) API. You can access the default edge config store or any additinoal store assigned to your project:
+This package provides full access to Vercel's [Edge Config](https://vercel.com/docs/concepts/edge-network/edge-config) API. You can access the default edge config store or any additional store assigned to your project:
 
 ```swift
 // Default edge config
