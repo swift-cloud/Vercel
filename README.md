@@ -112,10 +112,7 @@ Use the following GitHub actions workflow to continuiously deploy your project t
 ```yaml
 name: Vercel
 
-on:
-  push:
-    branches:
-      - main
+on: push
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -134,8 +131,7 @@ jobs:
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-
+          restore-keys: ${{ runner.os }}-spm-
 
       - uses: actions/setup-node@v3
         with:
@@ -145,5 +141,5 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Deploy
-        run: swift package --disable-sandbox vercel --deploy --prod
+        run: swift package --disable-sandbox vercel --deploy
 ```
