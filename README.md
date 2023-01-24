@@ -89,19 +89,21 @@ vercel link
 After linking your project you can deploy it via Swift package manager:
 
 ```bash
-swift package --disable-sandbox vercel
+swift package --disable-sandbox vercel --deploy
 ```
 
 ### Deploy Options
 
 ```bash
-swift package --disable-sandbox vercel --product MyApp --memory 1024 --duration 60 --regions iad1,sfo1
+swift package --disable-sandbox vercel
 ```
 
-- `--product` - The product you want to deploy. Default: first target in Package.swift with the Vercel dependency
-- `--memory` - The amount of memory in megabytes to allocate to your function. Default 512mb
-- `--duration` - The maximum duration in seconds that your function will run. Default: 10s
-- `--regions` - Comma separated list of regions to deploy your function to. Default: iad1
+- `--deploy` - Triggers a deploy to Vercel
+- `--prod` - Triggers a production deploy to Vercel
+- `--product <name>` - The product you want to build. Default: first target in Package.swift with the Vercel dependency
+- `--memory <number>` - The amount of memory in megabytes to allocate to your function. Default 512mb
+- `--duration <number>` - The maximum duration in seconds that your function will run. Default: 10s
+- `--regions <name>` - Comma separated list of regions to deploy your function to. Default: iad1
 
 ### GitHub Actions
 
@@ -143,5 +145,5 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Deploy
-        run: swift package --disable-sandbox vercel --prod
+        run: swift package --disable-sandbox vercel --deploy --prod
 ```
