@@ -16,7 +16,7 @@ extension RequestHandler {
 
     public func handle(_ event: InvokeEvent, context: LambdaContext) async throws -> Response {
         let data = Data(event.body.utf8)
-        let req = try JSONDecoder().decode(Request.self, from: data)
-        return try await onRequest(req, context: .init(context))
+        let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: data)
+        return try await onRequest(.init(payload), context: .init(context))
     }
 }

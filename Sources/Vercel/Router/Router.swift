@@ -31,7 +31,6 @@ public final class Router {
 
     private func handler(for req: inout Request) -> Handler? {
         let pathComponents = req.url.pathComponents.dropFirst()
-        req._pathParams = req._pathParams ?? .init()
         return router.route(path: [req.method.rawValue] + pathComponents, parameters: &req.pathParams)
     }
 }

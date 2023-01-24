@@ -5,22 +5,24 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
-public struct Request: Codable, Sendable {
+public struct Request: Sendable {
     public let method: HTTPMethod
     public let headers: HTTPHeaders
     public let path: String
+    public let searchParams: [String: String]
     public let body: String?
 
     /// Private instance var to prevent decodable from failing
-    internal var _pathParams: Parameters? = .init()
-}
+    internal var pathParams: Parameters = .init()
 
-extension Request {
-
-    /// `pathParams` will only be set when used with a `Router`
-    public internal(set) var pathParams: Parameters {
-        get { _pathParams ?? .init() }
-        set { _pathParams = newValue }
+    internal init(_ payload: InvokeEvent.Payload) {
+        self.method = payload.method
+        self.headers = payload.headers
+        self.path = payload.path
+        self.body = payload.body
+        self.searchParams = URLComponents(string: payload.path)?
+            .queryItems?
+            .reduce(into: [:]) { $0[$1.name] = $1.value } ?? [:]
     }
 }
 
