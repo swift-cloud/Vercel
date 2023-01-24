@@ -56,7 +56,6 @@ public struct VercelOutput {
         print("")
 
         var deployArguments = [
-            "--cwd", context.pluginWorkDirectory.string,
             "deploy",
             "--prebuilt"
         ]
@@ -65,7 +64,7 @@ public struct VercelOutput {
             deployArguments.append("--prod")
         }
 
-        if localProjectConfiguration() == nil {
+        if let token = vercelToken {
             deployArguments.append("--token")
             deployArguments.append(token)
         }
@@ -213,7 +212,7 @@ extension VercelOutput {
     }
 
     public func writeProjectConfiguration() throws {
-        let config = localProjectConfiguration() ?? ProjectConfiguration(orgId: orgId, projectId: projectId)
+        let config = localProjectConfiguration() ?? ProjectConfiguration(orgId: vercelOrgID, projectId: vercelProjectID)
         let data = try encoder.encode(config)
         fs.createFile(atPath: vercelProjectConfigurationPath.string, contents: data)
     }
@@ -302,25 +301,22 @@ extension VercelOutput {
 
 extension VercelOutput {
 
-    public var orgId: String {
+    public var vercelOrgID: String {
         guard let value = ProcessInfo.processInfo.environment["VERCEL_ORG_ID"] else {
             fatalError("Missing VERCEL_ORG_ID")
         }
         return value
     }
 
-    public var projectId: String {
+    public var vercelProjectID: String {
         guard let value = ProcessInfo.processInfo.environment["VERCEL_PROJECT_ID"] else {
             fatalError("Missing VERCEL_PROJECT_ID")
         }
         return value
     }
 
-    public var token: String {
-        guard let value = ProcessInfo.processInfo.environment["VERCEL_TOKEN"] else {
-            fatalError("Missing VERCEL_TOKEN")
-        }
-        return value
+    public var vercelToken: String? {
+        return ProcessInfo.processInfo.environment["VERCEL_TOKEN"]
     }
 }
 
