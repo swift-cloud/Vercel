@@ -94,7 +94,7 @@ public struct VercelOutput {
             try await Shell.execute(
                 executable: context.tool(named: "node").path,
                 arguments: [
-                    projectDirectory.appending([".build", "checkouts", "Vercel", "server.js"]).string
+                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string
                 ]
             )
         }
