@@ -85,7 +85,7 @@ public struct VercelOutput {
         Task.detached {
             try await Shell.execute(
                 executable: context.tool(named: "swift").path,
-                arguments: ["run"],
+                arguments: ["run", "--package-path", projectDirectory.string],
                 environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
             )
         }
