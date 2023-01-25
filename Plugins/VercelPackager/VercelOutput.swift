@@ -82,7 +82,7 @@ public struct VercelOutput {
         print("-------------------------------------------------------------------------")
         print("")
 
-        Task.detached {
+        Task {
             try await Shell.execute(
                 executable: context.tool(named: "swift").path,
                 arguments: ["run", "--package-path", projectDirectory.string],
@@ -90,7 +90,7 @@ public struct VercelOutput {
             )
         }
 
-        Task.detached {
+        Task {
             try await Shell.execute(
                 executable: context.tool(named: "node").path,
                 arguments: [
