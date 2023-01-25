@@ -91,11 +91,6 @@ public struct VercelOutput {
         }
 
         let nodeTask = Task {
-            _ = try? await Shell.execute(
-                executable: context.tool(named: "killall").path,
-                arguments: ["node"]
-            )
-
             try await Shell.execute(
                 executable: context.tool(named: "node").path,
                 arguments: [
