@@ -19,7 +19,7 @@ public struct Shell {
     public static func execute(
         executable: Path,
         arguments: [String],
-        environment: [String: String]? = nil,
+        environment: [String: String] = [:],
         customWorkingDirectory: Path? = .none,
         logLevel: ProcessLogLevel = .output
     ) async throws -> String {
@@ -56,7 +56,7 @@ public struct Shell {
         process.standardError = pipe
         process.executableURL = URL(fileURLWithPath: executable.string)
         process.arguments = arguments
-        process.environment = environment
+        process.environment = ProcessInfo.processInfo.environment.merging(environment) { $1 }
         if let workingDirectory = customWorkingDirectory {
             process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory.string)
         }
