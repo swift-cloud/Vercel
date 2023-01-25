@@ -76,6 +76,12 @@ public struct VercelOutput {
     }
 
     public func dev() async throws {
+        print("")
+        print("-------------------------------------------------------------------------")
+        print("Starting dev server: http://localhost:8000")
+        print("-------------------------------------------------------------------------")
+        print("")
+
         Task.detached {
             try await Shell.execute(
                 executable: context.tool(named: "swift").path,
