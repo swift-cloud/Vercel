@@ -16,8 +16,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-crypto", "1.0.0" ..< "3.0.0"),
-        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.1"),
-        .package(url: "https://github.com/vapor/vapor", from: "4.0.0")
+        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.1")
     ],
     targets: [
         .target(name: "Vercel", dependencies: [
@@ -28,10 +27,7 @@ let package = Package(
             name: "VercelPackager",
             capability: .command(
                 intent: .custom(verb: "vercel", description: "Build and deploy your Swift application to Vercel")
-            ),
-            dependencies: [
-                .product(name: "Vapor", package: "vapor")
-            ]
+            )
         ),
         .testTarget(name: "VercelTests", dependencies: [
             .byName(name: "Vercel")

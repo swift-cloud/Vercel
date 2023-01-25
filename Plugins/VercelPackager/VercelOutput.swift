@@ -74,6 +74,26 @@ public struct VercelOutput {
             arguments: deployArguments
         )
     }
+
+    public func dev() async throws {
+        Task.detached {
+            try await Shell.execute(
+                executable: context.tool(named: "swift").path,
+                arguments: ["run", "--product", product.name],
+                environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
+            )
+        }
+
+        Task.detached {
+            try await Shell.execute(
+                executable: context.tool(named: "node").path,
+                arguments: [
+                    projectDirectory.appending([".build", "checkouts", "Vercel", "server.js"]).string
+                ]
+            )
+        }
+        try await Task.sleep(nanoseconds: .max)
+    }
 }
 
 // MARK: - Arguments
@@ -85,6 +105,10 @@ extension VercelOutput {
             return deployableProducts.first { $0.name == name }!
         }
         return deployableProducts[0]
+    }
+
+    public var isDev: Bool {
+        arguments.contains("dev")
     }
 
     public var isDeploy: Bool {
