@@ -82,7 +82,7 @@ public struct VercelOutput {
         print("-------------------------------------------------------------------------")
         print("")
 
-        Task {
+        let swiftTask = Task {
             try await Shell.execute(
                 executable: context.tool(named: "swift").path,
                 arguments: ["run", "--package-path", projectDirectory.string],
@@ -90,7 +90,7 @@ public struct VercelOutput {
             )
         }
 
-        Task {
+        let nodeTask = Task {
             try await Shell.execute(
                 executable: context.tool(named: "node").path,
                 arguments: [
@@ -100,6 +100,11 @@ public struct VercelOutput {
         }
 
         while true {
+            guard Task.isCancelled == false else {
+                swiftTask.cancel()
+                nodeTask.cancel()
+                return
+            }
             try await Task.sleep(nanoseconds: 1_000_000_000_000)
         }
     }

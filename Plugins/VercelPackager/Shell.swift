@@ -67,6 +67,10 @@ public struct Shell {
         try process.run()
 
         while process.isRunning {
+            guard Task.isCancelled == false else {
+                process.terminate()
+                break
+            }
             try await Task.sleep(nanoseconds: 1_000_000_000)
         }
 
