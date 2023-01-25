@@ -67,7 +67,7 @@ extension EdgeConfig {
             }
             return id
         }
-        if let value = Vercel.Environment.current[input] {
+        if let value = Vercel.Environment[input] {
             return try parseConfigID(value)
         }
         throw EdgeConfigError.invalidConnection

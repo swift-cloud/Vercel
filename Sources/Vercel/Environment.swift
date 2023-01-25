@@ -5,38 +5,36 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
-import Foundation
+import AWSLambdaRuntime
 
 extension Vercel {
     public struct Environment: Sendable {
 
-        public static let current = Environment()
-
-        public func get(_ key: String) -> String? {
-            return ProcessInfo.processInfo.environment[key]
+        public static func get(_ key: String) -> String? {
+            return Lambda.env(key)
         }
 
-        public func get(_ key: String, default value: String) -> String {
-            return ProcessInfo.processInfo.environment[key, default: value]
+        public static func get(_ key: String, default value: String) -> String {
+            return Lambda.env(key) ?? value
         }
 
-        public subscript(key: String) -> String? {
-            return self.get(key)
+        public static subscript(key: String) -> String? {
+            return get(key)
         }
 
-        public subscript(key: String, default value: String) -> String {
-            return self.get(key, default: value)
+        public static subscript(key: String, default value: String) -> String {
+            return get(key, default: value)
         }
     }
 }
 
 extension Vercel.Environment {
 
-    public static var edgeConfig = current["EDGE_CONFIG"]!
+    public static var edgeConfig = Self["EDGE_CONFIG"]!
 
-    public static var vercelEnvironment = current["VERCEL_ENV"] ?? "dev"
+    public static var vercelEnvironment = Self["VERCEL_ENV", default: "dev"]
 
-    public static var vercelHostname = current["VERCEL_URL"] ?? "localhost"
+    public static var vercelHostname = Self["VERCEL_URL", default: "localhost"]
 
-    public static var vercelRegion = current["VERCEL_REGION"] ?? "dev1"
+    public static var vercelRegion = Self["VERCEL_REGION", default: "dev1"]
 }
