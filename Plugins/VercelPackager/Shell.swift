@@ -20,99 +20,76 @@ public struct Shell {
         executable: Path,
         arguments: [String],
         environment: [String: String] = [:],
-        customWorkingDirectory: Path? = .none,
-        logLevel: ProcessLogLevel = .output
-    ) async throws -> String {
-        if logLevel >= .debug {
-            print("\(executable.string) \(arguments.joined(separator: " "))")
-        }
-
-        var output = ""
-
-        let outputHandler = { (data: Data?) in
-            guard let _output = data.flatMap({ String(data: $0, encoding: .utf8)?.trimmingCharacters(in: CharacterSet(["\n"])) }), !_output.isEmpty else {
-                return
-            }
-
-            output += _output + "\n"
-
-            switch logLevel {
-            case .silent:
-                break
-            case .debug(let outputIndent), .output(let outputIndent):
-                print(String(repeating: " ", count: outputIndent), terminator: "")
-                print(_output)
-                fflush(stdout)
-            }
-        }
-
-        let pipe = Pipe()
-        pipe.fileHandleForReading.readabilityHandler = { fileHandle in
-            outputHandler(fileHandle.availableData)
-        }
-
+        customWorkingDirectory: Path? = .none
+    ) throws -> String {
+        // Create our process and setup arguments and environment
         let process = Process()
-        process.standardOutput = pipe
-        process.standardError = pipe
         process.executableURL = URL(fileURLWithPath: executable.string)
         process.arguments = arguments
         process.environment = ProcessInfo.processInfo.environment.merging(environment) { $1 }
+
+        // Setup custom working directory
         if let workingDirectory = customWorkingDirectory {
             process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory.string)
         }
-        process.terminationHandler = { _ in
-            outputHandler(try? pipe.fileHandleForReading.readToEnd())
-        }
 
-        try process.run()
+        // Because FileHandle's readabilityHandler might be called from a
+        // different queue from the calling queue, avoid a data race by
+        // protecting reads and writes to outputData and errorData on
+        // a single dispatch queue.
+        let outputQueue = DispatchQueue(label: "bash-output-queue")
 
-        while process.isRunning {
-            guard Task.isCancelled == false else {
-                process.terminate()
-                break
+        var outputData = Data()
+        var errorData = Data()
+
+        let outputPipe = Pipe()
+        process.standardOutput = outputPipe
+
+        let errorPipe = Pipe()
+        process.standardError = errorPipe
+
+        #if !os(Linux)
+        outputPipe.fileHandleForReading.readabilityHandler = { handler in
+            let data = handler.availableData
+            outputQueue.async {
+                outputData.append(data)
             }
-            try await Task.sleep(nanoseconds: 1_000_000_000)
         }
 
-        if process.terminationStatus != 0 {
-            // print output on failure and if not already printed
-            if logLevel < .output {
-                print(output)
-                fflush(stdout)
+        errorPipe.fileHandleForReading.readabilityHandler = { handler in
+            let data = handler.availableData
+            outputQueue.async {
+                errorData.append(data)
             }
-            throw ShellError.processFailed([executable.string] + arguments, process.terminationStatus)
         }
+        #endif
 
-        return output
-    }
-}
+        // Run our process
+        process.launch()
 
-public enum ProcessLogLevel: Comparable {
-    case silent
-    case output(outputIndent: Int)
-    case debug(outputIndent: Int)
-
-    var naturalOrder: Int {
-        switch self {
-        case .silent:
-            return 0
-        case .output:
-            return 1
-        case .debug:
-            return 2
+        #if os(Linux)
+        outputQueue.sync {
+            outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
+            errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
         }
-    }
+        #endif
 
-    static public var output: Self {
-        .output(outputIndent: 2)
-    }
+        process.waitUntilExit()
 
-    static public var debug: Self {
-        .debug(outputIndent: 2)
-    }
+        #if !os(Linux)
+        outputPipe.fileHandleForReading.readabilityHandler = nil
+        errorPipe.fileHandleForReading.readabilityHandler = nil
+        #endif
 
-    static public func < (lhs: ProcessLogLevel, rhs: ProcessLogLevel) -> Bool {
-        lhs.naturalOrder < rhs.naturalOrder
+        // Block until all writes have occurred to outputData and errorData,
+        // and then read the data back out.
+        return try outputQueue.sync {
+            if process.terminationStatus != 0 {
+                throw ShellError.processFailed(arguments, process.terminationStatus)
+            }
+
+            return String(data: outputData, encoding: .utf8)!
+        }
     }
 }
 

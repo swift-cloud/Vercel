@@ -69,7 +69,7 @@ public struct VercelOutput {
             deployArguments.append(token)
         }
 
-        try await Shell.execute(
+        try Shell.execute(
             executable: context.tool(named: "vercel").path,
             arguments: deployArguments
         )
@@ -83,7 +83,7 @@ public struct VercelOutput {
         print("")
 
         let swiftTask = Task {
-            try await Shell.execute(
+            try Shell.execute(
                 executable: context.tool(named: "swift").path,
                 arguments: ["run", "--package-path", projectDirectory.string],
                 environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
@@ -91,7 +91,7 @@ public struct VercelOutput {
         }
 
         let nodeTask = Task {
-            try await Shell.execute(
+            try Shell.execute(
                 executable: context.tool(named: "node").path,
                 arguments: [
                     projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string
@@ -403,15 +403,14 @@ extension VercelOutput {
 
         // update the underlying docker image, if necessary
         print("updating \"\(baseImage)\" docker image")
-        try await Shell.execute(
+        try Shell.execute(
             executable: dockerToolPath,
-            arguments: ["pull", baseImage],
-            logLevel: .output
+            arguments: ["pull", baseImage]
         )
 
         // get the build output path
         let buildOutputPathCommand = "swift build -c release --show-bin-path"
-        let dockerBuildOutputPath = try await Shell.execute(
+        let dockerBuildOutputPath = try Shell.execute(
             executable: dockerToolPath,
             arguments: [
                 "run",
@@ -421,8 +420,7 @@ extension VercelOutput {
                 "-w", "/workspace",
                 baseImage,
                 "bash", "-cl", buildOutputPathCommand
-            ],
-            logLevel: .output
+            ]
         )
         guard let buildPathOutput = dockerBuildOutputPath.split(separator: "\n").last else {
             throw BuildError.failedParsingDockerOutput(dockerBuildOutputPath)
@@ -431,7 +429,7 @@ extension VercelOutput {
 
         // build the product
         let buildCommand = "swift build -c release --product \(product.name) --static-swift-stdlib"
-        try await Shell.execute(
+        try Shell.execute(
             executable: dockerToolPath,
             arguments: [
                 "run",
@@ -441,8 +439,7 @@ extension VercelOutput {
                 "-w", "/workspace",
                 baseImage,
                 "bash", "-cl", buildCommand
-            ],
-            logLevel: .output
+            ]
         )
 
         // ensure the final binary built correctly
