@@ -78,7 +78,7 @@ public struct VercelOutput {
     public func dev() async throws {
         print("")
         print("-------------------------------------------------------------------------")
-        print("Starting dev server: http://localhost:8000")
+        print("Starting dev server: http://localhost:7676")
         print("-------------------------------------------------------------------------")
         print("")
 

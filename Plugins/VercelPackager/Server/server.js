@@ -48,9 +48,3 @@ server.listen(port, () => {
     console.log('Http Server running:', `http://localhost:${port}`)
     console.log('')
 })
-
-server.on('error', () => {
-    console.log('')
-    console.log('Http Server running:', `http://localhost:${port}`)
-    console.log('')
-})
