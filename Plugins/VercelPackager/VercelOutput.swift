@@ -83,34 +83,20 @@ public struct VercelOutput {
         print("")
 
         Task {
-            let swiftProcess = Process()
-            _ = try await withTaskCancellationHandler {
-                try Shell.execute(
-                    process: swiftProcess,
-                    executable: context.tool(named: "swift").path,
-                    arguments: ["run", "--package-path", projectDirectory.string],
-                    environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
-                )
-            } onCancel: {
-                print("SWIFT CANCELED")
-                swiftProcess.terminate()
-            }
+            try Shell.execute(
+                executable: context.tool(named: "swift").path,
+                arguments: ["run", "--package-path", projectDirectory.string],
+                environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
+            )
         }
 
         Task {
-            let nodeProcess = Process()
-            _ = try await withTaskCancellationHandler {
-                try Shell.execute(
-                    process: nodeProcess,
-                    executable: context.tool(named: "node").path,
-                    arguments: [
-                        projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string
-                    ]
-                )
-            } onCancel: {
-                print("NDOE CANCELED")
-                nodeProcess.terminate()
-            }
+            try Shell.execute(
+                executable: context.tool(named: "node").path,
+                arguments: [
+                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string
+                ]
+            )
         }
 
         while true {
