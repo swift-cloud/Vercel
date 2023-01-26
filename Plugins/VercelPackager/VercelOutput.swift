@@ -82,29 +82,38 @@ public struct VercelOutput {
         print("-------------------------------------------------------------------------")
         print("")
 
-        let swiftTask = Task {
-            try Shell.execute(
-                executable: context.tool(named: "swift").path,
-                arguments: ["run", "--package-path", projectDirectory.string],
-                environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
-            )
+        Task {
+            let swiftProcess = Process()
+            _ = try await withTaskCancellationHandler {
+                try Shell.execute(
+                    process: swiftProcess,
+                    executable: context.tool(named: "swift").path,
+                    arguments: ["run", "--package-path", projectDirectory.string],
+                    environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
+                )
+            } onCancel: {
+                print("SWIFT CANCELED")
+                swiftProcess.terminate()
+            }
         }
 
-        let nodeTask = Task {
-            try Shell.execute(
-                executable: context.tool(named: "node").path,
-                arguments: [
-                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string
-                ]
-            )
+        Task {
+            let nodeProcess = Process()
+            _ = try await withTaskCancellationHandler {
+                try Shell.execute(
+                    process: nodeProcess,
+                    executable: context.tool(named: "node").path,
+                    arguments: [
+                        projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string
+                    ]
+                )
+            } onCancel: {
+                print("NDOE CANCELED")
+                nodeProcess.terminate()
+            }
         }
 
         while true {
-            guard Task.isCancelled == false else {
-                swiftTask.cancel()
-                nodeTask.cancel()
-                return
-            }
             try await Task.sleep(nanoseconds: 1_000_000_000_000)
         }
     }

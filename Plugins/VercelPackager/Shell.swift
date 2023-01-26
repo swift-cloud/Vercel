@@ -17,6 +17,7 @@ public struct Shell {
 
     @discardableResult
     public static func execute(
+        process: Process = .init(),
         executable: Path,
         arguments: [String],
         environment: [String: String] = [:],
@@ -49,7 +50,6 @@ public struct Shell {
         let pipe = Pipe()
         pipe.fileHandleForReading.readabilityHandler = { fileHandle in outputQueue.async { outputHandler(fileHandle.availableData) } }
 
-        let process = Process()
         process.standardOutput = pipe
         process.standardError = pipe
         process.executableURL = URL(fileURLWithPath: executable.string)
@@ -88,3 +88,5 @@ public enum ShellError: Error, CustomStringConvertible {
         }
     }
 }
+
+extension Process: @unchecked Sendable {}

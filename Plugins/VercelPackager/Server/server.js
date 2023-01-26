@@ -1,5 +1,5 @@
 const http = require('http')
-const port = Number(process.argv[2] || 8000)
+const port = Number(process.argv[2] || 7676)
 
 async function invoke(payload) {
   return new Promise((resolve, reject) => {
@@ -43,4 +43,14 @@ const server = http.createServer(async (req, res) => {
   }
 })
 
-server.listen(port)
+server.listen(port, () => {
+    console.log('')
+    console.log('Http Server running:', `http://localhost:${port}`)
+    console.log('')
+})
+
+server.on('error', () => {
+    console.log('')
+    console.log('Http Server running:', `http://localhost:${port}`)
+    console.log('')
+})
