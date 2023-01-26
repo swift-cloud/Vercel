@@ -22,74 +22,59 @@ public struct Shell {
         environment: [String: String] = [:],
         customWorkingDirectory: Path? = .none
     ) throws -> String {
-        // Create our process and setup arguments and environment
+        print("")
+        print("\(executable.string) \(arguments.joined(separator: " "))")
+        print("")
+
+        var output = ""
+        let outputSync = DispatchGroup()
+        let outputQueue = DispatchQueue(label: "VercelPackager.output")
+        let outputHandler = { (data: Data?) in
+            dispatchPrecondition(condition: .onQueue(outputQueue))
+
+            outputSync.enter()
+            defer { outputSync.leave() }
+
+            guard let _output = data.flatMap({ String(data: $0, encoding: .utf8)?.trimmingCharacters(in: CharacterSet(["\n"])) }), !_output.isEmpty else {
+                return
+            }
+
+            output += _output + "\n"
+
+            print(String(repeating: " ", count: 2), terminator: "")
+            print(_output)
+            fflush(stdout)
+        }
+
+        let pipe = Pipe()
+        pipe.fileHandleForReading.readabilityHandler = { fileHandle in outputQueue.async { outputHandler(fileHandle.availableData) } }
+
         let process = Process()
+        process.standardOutput = pipe
+        process.standardError = pipe
         process.executableURL = URL(fileURLWithPath: executable.string)
         process.arguments = arguments
         process.environment = ProcessInfo.processInfo.environment.merging(environment) { $1 }
-
-        // Setup custom working directory
         if let workingDirectory = customWorkingDirectory {
             process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory.string)
         }
-
-        // Because FileHandle's readabilityHandler might be called from a
-        // different queue from the calling queue, avoid a data race by
-        // protecting reads and writes to outputData and errorData on
-        // a single dispatch queue.
-        let outputQueue = DispatchQueue(label: "bash-output-queue")
-
-        var outputData = Data()
-        var errorData = Data()
-
-        let outputPipe = Pipe()
-        process.standardOutput = outputPipe
-
-        let errorPipe = Pipe()
-        process.standardError = errorPipe
-
-        #if !os(Linux)
-        outputPipe.fileHandleForReading.readabilityHandler = { handler in
-            let data = handler.availableData
+        process.terminationHandler = { _ in
             outputQueue.async {
-                outputData.append(data)
+                outputHandler(try? pipe.fileHandleForReading.readToEnd())
             }
         }
 
-        errorPipe.fileHandleForReading.readabilityHandler = { handler in
-            let data = handler.availableData
-            outputQueue.async {
-                errorData.append(data)
-            }
-        }
-        #endif
-
-        // Run our process
-        process.launch()
-
-        #if os(Linux)
-        outputQueue.sync {
-            outputData = outputPipe.fileHandleForReading.readDataToEndOfFile()
-            errorData = errorPipe.fileHandleForReading.readDataToEndOfFile()
-        }
-        #endif
-
+        try process.run()
         process.waitUntilExit()
 
-        #if !os(Linux)
-        outputPipe.fileHandleForReading.readabilityHandler = nil
-        errorPipe.fileHandleForReading.readabilityHandler = nil
-        #endif
+        // wait for output to be full processed
+        outputSync.wait()
 
-        // Block until all writes have occurred to outputData and errorData,
-        // and then read the data back out.
-        return try outputQueue.sync {
-            if process.terminationStatus != 0 {
-                throw ShellError.processFailed(arguments, process.terminationStatus)
-            }
-
-            return String(data: outputData, encoding: .utf8)!
+        if process.terminationStatus != 0 {
+            throw ShellError.processFailed([executable.string] + arguments, process.terminationStatus)
         }
+
+        return output
     }
 }
 
