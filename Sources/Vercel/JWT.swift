@@ -79,9 +79,9 @@ public struct JWT: Sendable {
 
         let input = "\(_header).\(_payload)"
 
-        let signature = try HMAC(key: secret.bytes, variant: algorithm.variant).authenticate(input.bytes)
+        let signature = try hmacSignature(input, key: secret, using: algorithm)
 
-        let _signature = try base64UrlEncode(.init(signature))
+        let _signature = try base64UrlEncode(signature)
 
         self.header = header
         self.payload = payload
@@ -141,9 +141,7 @@ extension JWT {
         let input = token.components(separatedBy: ".").prefix(2).joined(separator: ".")
 
         // Compute signature based on secret
-        let computedSignature = try HMAC(key: secret.bytes, variant: algorithm.variant)
-            .authenticate(input.bytes)
-            .toHexString()
+        let computedSignature = try hmacSignature(input, key: secret, using: algorithm).toHexString()
 
         // Ensure the signatures match
         guard signature == computedSignature else {
@@ -174,21 +172,11 @@ extension JWT {
         case hs256 = "HS256"
         case hs384 = "HS384"
         case hs512 = "HS512"
-
-        internal var variant: HMAC.Variant {
-            switch self {
-            case .hs256:
-                return .sha2(.sha256)
-            case .hs384:
-                return .sha2(.sha384)
-            case .hs512:
-                return .sha2(.sha512)
-            }
-        }
     }
 }
 
 public enum JWTError: Error {
+    case invalidInputData
     case invalidToken
     case invalidBase64URL
     case invalidJSON
@@ -202,6 +190,8 @@ extension JWTError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
+        case .invalidInputData:
+            return "Invalid input data"
         case .invalidToken:
             return "Invalid token"
         case .invalidBase64URL:
@@ -220,6 +210,12 @@ extension JWTError: LocalizedError {
     }
 }
 
+extension Data {
+    internal func toHexString() -> String {
+        return reduce("") {$0 + String(format: "%02x", $1)}
+    }
+}
+
 private func decodeJWTPart(_ value: String) throws -> [String: Any] {
     let bodyData = try base64UrlDecode(value)
     guard let json = try JSONSerialization.jsonObject(with: bodyData, options: []) as? [String: Any] else {
@@ -231,6 +227,23 @@ private func decodeJWTPart(_ value: String) throws -> [String: Any] {
 private func encodeJWTPart(_ value: [String: Any]) throws -> String {
     let data = try JSONSerialization.data(withJSONObject: value, options: [.sortedKeys])
     return try base64UrlEncode(data)
+}
+
+private func hmacSignature(_ input: String, key: String, using algorithm: JWT.Algorithm) throws -> Data {
+    guard let inputData = input.data(using: .utf8) else {
+        throw JWTError.invalidInputData
+    }
+    guard let keyData = key.data(using: .utf8) else {
+        throw JWTError.invalidInputData
+    }
+    switch algorithm {
+    case .hs256:
+        return .init(HMAC<SHA256>.authenticationCode(for: inputData, using: .init(data: keyData)))
+    case .hs384:
+        return .init(HMAC<SHA384>.authenticationCode(for: inputData, using: .init(data: keyData)))
+    case .hs512:
+        return .init(HMAC<SHA512>.authenticationCode(for: inputData, using: .init(data: keyData)))
+    }
 }
 
 private func base64UrlDecode(_ value: String) throws -> Data {

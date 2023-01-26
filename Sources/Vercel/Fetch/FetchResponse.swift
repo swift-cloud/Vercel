@@ -63,6 +63,6 @@ extension FetchResponse {
     }
 
     public func bytes() async throws -> [UInt8] {
-        return body.bytes
+        return Array(body)
     }
 }

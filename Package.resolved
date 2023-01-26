@@ -1,15 +1,6 @@
 {
   "pins" : [
     {
-      "identity" : "crypto",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swift-cloud/Crypto",
-      "state" : {
-        "revision" : "defff250bbd79d81fb8ee53926360fc522d75bad",
-        "version" : "1.6.0"
-      }
-    },
-    {
       "identity" : "swift-atomics",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-atomics.git",
@@ -46,12 +37,21 @@
       }
     },
     {
+      "identity" : "swift-crypto",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-crypto.git",
+      "state" : {
+        "revision" : "75ec60b8b4cc0f085c3ac414f3dca5625fa3588e",
+        "version" : "2.2.4"
+      }
+    },
+    {
       "identity" : "swift-log",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-log.git",
       "state" : {
-        "revision" : "3e3ef75109d6801b2c44504e73f55f0dce6662c9",
-        "version" : "1.5.1"
+        "revision" : "32e8d724467f8fe623624570367e3d50c5638e46",
+        "version" : "1.5.2"
       }
     },
     {
