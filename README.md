@@ -82,6 +82,16 @@ let num = EdgeConfig("EDGE_CONFIG_2").get("some-int-key").int
 
 You can add a top level `public` folder that will be deployed statically to Vercel's CDN.
 
+### Running Locally
+
+Running server side locally has traditionally been a huge pain, but not anymore. This package makes it trivial to run code locally:
+
+```bash
+swift package --disable-sandbox vercel dev
+```
+
+This will build and run your Swift application and start a local server at [http://localhost:7676](http://localhost:7676)
+
 ## Deploy
 
 ### Locally
