@@ -390,6 +390,10 @@ extension VercelOutput {
             parameters: parameters
         )
 
+        print("")
+        print(result.logText)
+        print("")
+
         guard let artifact = result.executableArtifact(for: product) else {
             throw BuildError.productExecutableNotFound(product.name)
         }
