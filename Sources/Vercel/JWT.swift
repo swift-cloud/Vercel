@@ -121,10 +121,10 @@ extension JWT {
     }
 
     public var expired: Bool {
-        guard let date = self.expiresAt else {
+        guard let expiresAt = self.expiresAt else {
             return false
         }
-        return Date() < date
+        return Date() > expiresAt
     }
 }
 
