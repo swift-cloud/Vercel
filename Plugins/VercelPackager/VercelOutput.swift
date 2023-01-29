@@ -78,7 +78,7 @@ public struct VercelOutput {
     public func dev() async throws {
         print("")
         print("-------------------------------------------------------------------------")
-        print("Starting dev server: http://localhost:7676")
+        print("Starting dev server: http://localhost:\(port)")
         print("-------------------------------------------------------------------------")
         print("")
 
@@ -94,7 +94,8 @@ public struct VercelOutput {
             try Shell.execute(
                 executable: context.tool(named: "node").path,
                 arguments: [
-                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string
+                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string,
+                    port
                 ]
             )
         }
@@ -138,6 +139,10 @@ extension VercelOutput {
 
     public var functionRegions: String? {
         argument("regions")
+    }
+
+    public var port: String {
+        argument("port") ?? "7676"
     }
 
     public func argument(_ key: String) -> String? {
