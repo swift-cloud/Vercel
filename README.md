@@ -90,7 +90,9 @@ Running server side locally has traditionally been a huge pain, but not anymore.
 swift package --disable-sandbox vercel dev
 ```
 
-This will build and run your Swift application and start a local server at [http://localhost:7676](http://localhost:7676)
+This will build and run your Swift application and start a local Node.js server at [http://localhost:7676](http://localhost:7676)
+
+> Note: You must install [Node.js](https://nodejs.org) to develop locally. It's on my to do list to convert this local Node server to Swift.
 
 ## Deploy
 
