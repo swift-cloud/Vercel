@@ -120,6 +120,7 @@ swift package --disable-sandbox vercel
 - `--memory <number>` - The amount of memory in megabytes to allocate to your function. Default 512mb
 - `--duration <number>` - The maximum duration in seconds that your function will run. Default: 10s
 - `--regions <name>` - Comma separated list of regions to deploy your function to. Default: iad1
+- `--port <number>` - Custom port to run the local dev server on. Default: 7676
 
 ### GitHub Actions
 
