@@ -15,7 +15,7 @@ public struct JWT: Sendable {
 
     public let payload: [String: Sendable]
 
-    public let signature: String
+    public let signature: Data
 
     public func claim(name: String) -> Claim {
         return .init(payload[name])
@@ -32,7 +32,7 @@ public struct JWT: Sendable {
         }
         self.header = try decodeJWTPart(parts[0])
         self.payload = try decodeJWTPart(parts[1])
-        self.signature = try base64UrlDecode(parts[2]).toHexString()
+        self.signature = try base64UrlDecode(parts[2])
         self.token = token
     }
 
@@ -85,7 +85,7 @@ public struct JWT: Sendable {
 
         self.header = header
         self.payload = payload
-        self.signature = signature.toHexString()
+        self.signature = signature
         self.token = "\(_header).\(_payload).\(_signature)"
     }
 }
@@ -135,21 +135,17 @@ extension JWT {
         secret: String,
         algorithm: Algorithm = .hs256,
         issuer: String? = nil,
-        subject: String? = nil
+        subject: String? = nil,
+        expiration: Bool = true
     ) throws -> Self {
         // Build input
         let input = token.components(separatedBy: ".").prefix(2).joined(separator: ".")
 
-        // Compute signature based on secret
-        let computedSignature = try hmacSignature(input, key: secret, using: algorithm).toHexString()
-
-        // Ensure the signatures match
-        guard signature == computedSignature else {
-            throw JWTError.invalidSignature
-        }
+        // Verify the signature
+        try verifySignature(input, signature: signature, key: secret, using: algorithm)
 
         // Ensure the jwt is not expired
-        guard expired == false else {
+        if expiration, expired == false {
             throw JWTError.expiredToken
         }
 
@@ -172,6 +168,7 @@ extension JWT {
         case hs256 = "HS256"
         case hs384 = "HS384"
         case hs512 = "HS512"
+        case es256 = "ES256"
     }
 }
 
@@ -184,6 +181,7 @@ public enum JWTError: Error {
     case invalidIssuer
     case invalidSubject
     case expiredToken
+    case unsupportedAlgorithm
 }
 
 extension JWTError: LocalizedError {
@@ -206,6 +204,8 @@ extension JWTError: LocalizedError {
             return "Subjects do not match"
         case .expiredToken:
             return "Expired token"
+        case .unsupportedAlgorithm:
+            return "Unsupported algorithm"
         }
     }
 }
@@ -243,6 +243,36 @@ private func hmacSignature(_ input: String, key: String, using algorithm: JWT.Al
         return .init(HMAC<SHA384>.authenticationCode(for: inputData, using: .init(data: keyData)))
     case .hs512:
         return .init(HMAC<SHA512>.authenticationCode(for: inputData, using: .init(data: keyData)))
+    case .es256:
+        throw JWTError.unsupportedAlgorithm
+    }
+}
+
+private func verifySignature(_ input: String, signature: Data, key: String, using algorithm: JWT.Algorithm) throws {
+    switch algorithm {
+    case .es256:
+        try verifyECDSASignature(input, signature: signature, key: key, using: algorithm)
+    default:
+        try verifyHMACSignature(input, signature: signature, key: key, using: algorithm)
+    }
+}
+
+private func verifyHMACSignature(_ input: String, signature: Data, key: String, using algorithm: JWT.Algorithm) throws {
+    // Compute signature based on secret
+    let computedSignature = try hmacSignature(input, key: key, using: algorithm).toHexString()
+
+    // Ensure the signatures match
+    guard signature.toHexString() == computedSignature else {
+        throw JWTError.invalidSignature
+    }
+}
+
+private func verifyECDSASignature(_ input: String, signature: Data, key: String, using algorithm: JWT.Algorithm) throws {
+    let publicKey = try P256.Signing.PublicKey(pemRepresentation: key)
+    let ecdsaSignature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
+    let verified = publicKey.isValidSignature(ecdsaSignature, for: sha256(input))
+    guard verified else {
+        throw JWTError.invalidSignature
     }
 }
 
@@ -269,4 +299,11 @@ private func base64UrlEncode(_ value: Data) throws -> String {
         .trimmingCharacters(in: ["="])
         .replacingOccurrences(of: "+", with: "-")
         .replacingOccurrences(of: "/", with: "_")
+}
+
+private func sha256(_ input: String) -> SHA256.Digest {
+    let data = input.data(using: .utf8) ?? .init()
+    var hash = SHA256()
+    hash.update(data: data)
+    return hash.finalize()
 }
