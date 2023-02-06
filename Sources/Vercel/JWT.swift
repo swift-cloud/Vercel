@@ -303,7 +303,5 @@ private func base64UrlEncode(_ value: Data) throws -> String {
 
 private func sha256(_ input: String) -> SHA256.Digest {
     let data = input.data(using: .utf8) ?? .init()
-    var hash = SHA256()
-    hash.update(data: data)
-    return hash.finalize()
+    return SHA256.hash(data: data)
 }
