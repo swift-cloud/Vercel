@@ -105,7 +105,7 @@ vercel link
 After linking your project you can deploy it via Swift package manager:
 
 ```bash
-swift package --disable-sandbox vercel --deploy
+swift package --disable-sandbox vercel deploy
 ```
 
 ### Deploy Options
@@ -114,7 +114,6 @@ swift package --disable-sandbox vercel --deploy
 swift package --disable-sandbox vercel
 ```
 
-- `--deploy` - Triggers a deploy to Vercel
 - `--prod` - Triggers a production deploy to Vercel
 - `--product <name>` - The product you want to build. Default: first target in Package.swift with the Vercel dependency
 - `--memory <number>` - The amount of memory in megabytes to allocate to your function. Default 512mb
