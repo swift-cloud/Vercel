@@ -118,7 +118,7 @@ extension VercelOutput {
     }
 
     public var isDev: Bool {
-        arguments.contains("dev")
+        arguments.contains("dev") || arguments.contains("--dev")
     }
 
     public var isDeploy: Bool {
