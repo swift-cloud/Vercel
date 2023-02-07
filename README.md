@@ -111,7 +111,7 @@ swift package --disable-sandbox vercel deploy
 ### Deploy Options
 
 ```bash
-swift package --disable-sandbox vercel
+swift package --disable-sandbox vercel deploy
 ```
 
 - `--prod` - Triggers a production deploy to Vercel
