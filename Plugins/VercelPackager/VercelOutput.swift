@@ -122,7 +122,7 @@ extension VercelOutput {
     }
 
     public var isDeploy: Bool {
-        arguments.contains("deploy")
+        arguments.contains("deploy") || arguments.contains("--deploy")
     }
 
     public var isProduction: Bool {
