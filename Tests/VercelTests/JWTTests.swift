@@ -23,17 +23,17 @@ final class JWTTests: XCTestCase {
 
     func testVerifySuccess() throws {
         let jwt = try JWT(token: token)
-        try jwt.verify(secret: "your-256-bit-secret", expiration: false)
+        try jwt.verify(key: "your-256-bit-secret", expiration: false)
     }
 
     func testVerifyFanoutSuccess() throws {
         let jwt = try JWT(token: fanoutToken)
-        try jwt.verify(secret: fanoutPublicKey, algorithm: .es256, expiration: false)
+        try jwt.verify(key: fanoutPublicKey, expiration: false)
     }
 
     func testVerifyFailure() throws {
         let jwt = try JWT(token: token)
-        try XCTAssertThrowsError(jwt.verify(secret: "bogus-secret"))
+        try XCTAssertThrowsError(jwt.verify(key: "bogus-secret"))
     }
 
     func testSubject() throws {
@@ -56,5 +56,30 @@ final class JWTTests: XCTestCase {
             subject: "1234567890"
         )
         XCTAssertEqual(jwt.token, token)
+    }
+
+    func testES256() throws {
+        let publicKey = """
+        -----BEGIN PUBLIC KEY-----
+        MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEEVs/o5+uQbTjL3chynL4wXgUg2R9
+        q9UU8I5mEovUf86QZ7kOBIjJwqnzD1omageEHWwHdBO6B+dFabmdT9POxg==
+        -----END PUBLIC KEY-----
+        """
+        let privateKey = """
+        -----BEGIN PRIVATE KEY-----
+        MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgevZzL1gdAFr88hb2
+        OF/2NxApJCzGCEDdfSp6VQO30hyhRANCAAQRWz+jn65BtOMvdyHKcvjBeBSDZH2r
+        1RTwjmYSi9R/zpBnuQ4EiMnCqfMPWiZqB4QdbAd0E7oH50VpuZ1P087G
+        -----END PRIVATE KEY-----
+        """
+        let jwt1 = try JWT(
+            claims: ["name": "John Doe"],
+            secret: privateKey,
+            algorithm: .es256,
+            issuedAt: Date(timeIntervalSince1970: 1669591611),
+            subject: "1234567890"
+        )
+        let jwt2 = try JWT(token: jwt1.token)
+        try jwt2.verify(key: publicKey, expiration: false)
     }
 }
