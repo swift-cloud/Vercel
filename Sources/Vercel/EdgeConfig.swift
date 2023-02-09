@@ -40,7 +40,7 @@ extension EdgeConfig {
     }
 
     public func get(_ key: String) -> Claim {
-        return .init(items[key])
+        return .init(value: items[key])
     }
 
     public func has(_ key: String) -> Bool {

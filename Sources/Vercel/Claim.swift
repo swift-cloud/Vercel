@@ -5,19 +5,10 @@
 //  Created by Andrew Barba on 1/22/23.
 //
 
-public struct Claim: Sendable {
+public struct Claim {
 
     /// Raw claim value.
-    internal let value: Sendable?
-
-    internal init(_ value: Sendable?) {
-        self.value = value
-    }
-
-    /// Original claim value.
-    public var rawValue: Sendable? {
-        return self.value
-    }
+    public let value: Any?
 
     /// Value of the claim as `String`.
     public var string: String? {
@@ -71,8 +62,8 @@ public struct Claim: Sendable {
     }
 
     /// Value of the claim as `[String: Any]`.
-    public var dictionary: [String: Sendable]? {
-        if let dict = self.value as? [String: Sendable] {
+    public var dictionary: [String: Any]? {
+        if let dict = self.value as? [String: Any] {
             return dict
         }
         return nil
@@ -80,6 +71,6 @@ public struct Claim: Sendable {
 
     /// Special subscript syntax for chaining
     public subscript(_ key: String) -> Claim {
-        return .init(self.dictionary?[key])
+        return .init(value: self.dictionary?[key])
     }
 }

@@ -3,7 +3,7 @@ import XCTest
 
 final class ClaimTests: XCTestCase {
     func testClaimChaining() async throws {
-        let claim = Claim([
+        let claim = Claim(value: [
             "a": [
                 "b": [
                     "c": 100
