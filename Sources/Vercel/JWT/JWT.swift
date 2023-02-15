@@ -96,7 +96,7 @@ public struct JWT: Sendable {
 
         let input = "\(_header).\(_payload)"
 
-        let signature = try hmacSignature(input, secret: secret, using: algorithm)
+        let signature = try generateSignature(input, secret: secret, using: algorithm)
 
         let _signature = try base64UrlEncode(signature)
 
@@ -204,7 +204,7 @@ private func encodeJWTPart(_ value: [String: Any]) throws -> String {
     return try base64UrlEncode(data)
 }
 
-private func hmacSignature(_ input: String, secret: String, using algorithm: JWT.Algorithm) throws -> Data {
+private func generateSignature(_ input: String, secret: String, using algorithm: JWT.Algorithm) throws -> Data {
     switch algorithm {
     case .hs256:
         return Crypto.Auth.code(for: input, secret: secret, using: .sha256)
