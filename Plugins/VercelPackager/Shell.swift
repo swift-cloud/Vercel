@@ -13,7 +13,23 @@ import PackagePlugin
 import Glibc
 #endif
 
+private let globalSource = DispatchSource.makeSignalSource(signal: SIGINT)
+
+private var spawnQueue = DispatchQueue(label: "vercel.spawn")
+
+private var spawnedProcesses: Set<Process> = []
+
 public struct Shell {
+
+    static func prepare() {
+        signal(SIGINT, SIG_IGN)
+        globalSource.setEventHandler {
+            print("")
+            spawnedProcesses.filter { $0.isRunning }.forEach { $0.terminate() }
+            exit(SIGINT)
+        }
+        globalSource.resume()
+    }
 
     @discardableResult
     public static func execute(
@@ -26,6 +42,10 @@ public struct Shell {
         print("")
         print("\(executable.string) \(arguments.joined(separator: " "))")
         print("")
+
+        _ = spawnQueue.sync {
+            spawnedProcesses.insert(process)
+        }
 
         var output = ""
         let outputSync = DispatchGroup()
