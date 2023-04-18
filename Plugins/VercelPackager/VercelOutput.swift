@@ -403,7 +403,7 @@ extension VercelOutput {
 
     private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
-        let baseImage = "swift:5.7-amazonlinux2"
+        let baseImage = "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
 
         // update the underlying docker image, if necessary
         print("updating \"\(baseImage)\" docker image")
