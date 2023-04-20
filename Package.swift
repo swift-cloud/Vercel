@@ -16,12 +16,14 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-crypto", "1.0.0" ..< "3.0.0"),
-        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.1")
+        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.1"),
+        .package(url: "https://github.com/swift-server/async-http-client", from: "1.17.0")
     ],
     targets: [
         .target(name: "Vercel", dependencies: [
             .product(name: "Crypto", package: "swift-crypto"),
-            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime")
+            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
+            .product(name: "AsyncHTTPClient", package: "async-http-client")
         ]),
         .plugin(
             name: "VercelPackager",

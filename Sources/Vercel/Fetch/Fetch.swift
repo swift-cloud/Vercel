@@ -6,9 +6,12 @@
 //
 
 import Foundation
+import AsyncHTTPClient
 #if canImport(FoundationNetworking)
 import FoundationNetworking
 #endif
+
+let httpClient = HTTPClient(eventLoopGroupProvider: .createNew)
 
 public enum FetchError: Error, Sendable {
     case invalidResponse
@@ -43,9 +46,11 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
 
     // Set request resources
     var httpRequest = URLRequest(url: url)
+    var _req = HTTPClientRequest(url: url.absoluteString)
 
     // Set request method
     httpRequest.httpMethod = request.method.rawValue
+    _req.method = .init(rawValue: request.method.rawValue)
 
     // Set the timeout interval
     if let timeoutInterval = request.timeoutInterval {
@@ -56,26 +61,36 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
     if let contentType = request.body?.defaultContentType {
         let name = HTTPHeaderKey.contentType.rawValue
         httpRequest.setValue(request.headers[name] ?? contentType, forHTTPHeaderField: name)
+        _req.headers.add(name: name, value: request.headers[name] ?? contentType)
     }
 
     // Set headers
     for (key, value) in request.headers {
         httpRequest.setValue(value, forHTTPHeaderField: key)
+        _req.headers.add(name: key, value: value)
     }
 
     // Write bytes to body
     switch request.body {
     case .bytes(let bytes):
         httpRequest.httpBody = Data(bytes)
+        _req.body = .bytes(bytes)
     case .data(let data):
         httpRequest.httpBody = data
+        _req.body = .bytes(data)
     case .text(let text):
         httpRequest.httpBody = Data(text.utf8)
+        _req.body = .bytes(Data(text.utf8))
     case .json(let json):
         httpRequest.httpBody = json
+        _req.body = .bytes(json)
     case .none:
         break
     }
+
+    let _res = try await httpClient.execute(_req, timeout: .seconds(30))
+
+    _res.body.
 
     let (data, response): (Data, HTTPURLResponse) = try await withCheckedThrowingContinuation { continuation in
         let task = URLSession.shared.dataTask(with: httpRequest) { data, response, error in
