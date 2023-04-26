@@ -82,9 +82,9 @@ let num = EdgeConfig("EDGE_CONFIG_2").get("some-int-key").int
 
 You can add a top level `public` folder that will be deployed statically to Vercel's CDN.
 
-### CRON Jobs
+### Cron Jobs
 
-CRON jobs are fully supported by adding a `vercel.json` file to the root of your project and following the Vercel documentation here: https://vercel.com/docs/cron-jobs
+Cron jobs are fully supported by adding a `vercel.json` file to the root of your project and following the Vercel documentation here: https://vercel.com/docs/cron-jobs
 
 ### Running Locally
 
