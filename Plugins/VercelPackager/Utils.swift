@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import PackagePlugin
 
 public enum Architecture: String {
     case arm64 = "arm64"
@@ -30,5 +31,12 @@ public struct Utils {
         #else
             return nil
         #endif
+    }
+}
+
+extension ToolsVersion {
+
+    internal var versionString: String {
+        "\(major).\(minor).\(patch)"
     }
 }

@@ -285,8 +285,23 @@ extension VercelOutput {
             public var status: Int? = nil
             public var handle: String? = nil
         }
+        public struct Cron: Codable {
+            public var path: String
+            public var schedule: String
+        }
+        public struct Override: Codable {
+            public var path: String? = nil
+            public var contentType: String? = nil
+        }
+        public struct Framework: Codable {
+            public var version: String
+        }
         public var version: Int = 3
-        public var routes: [Route]
+        public var routes: [Route] = []
+        public var crons: [Cron] = []
+        public var overrides: [String: Override] = [:]
+        public var cache: [String] = []
+        public var framework: Framework
     }
 
     public var vercelOutputConfigurationPath: Path {
@@ -294,6 +309,7 @@ extension VercelOutput {
     }
 
     public func writeOutputConfiguration() throws {
+        let vercel = vercelConfiguration()
         let routes: [OutputConfiguration.Route] = [
             // Remove trailing slash
             .init(src: "^/(.*)/$", headers: ["Location": "/$1"], status: 308),
@@ -302,9 +318,37 @@ extension VercelOutput {
             // Proxy all other routes
             .init(src: "^(?:/(.*))$", dest: product.name, check: true)
         ]
-        let config = OutputConfiguration(routes: routes)
+        let config = OutputConfiguration(
+            routes: routes,
+            crons: vercel?.crons ?? [],
+            cache: [".build/**"],
+            framework: .init(version: context.package.toolsVersion.versionString)
+        )
         let data = try encoder.encode(config)
         fs.createFile(atPath: vercelOutputConfigurationPath.string, contents: data)
+    }
+}
+
+// MARK: - vercel.json
+
+extension VercelOutput {
+
+    public struct VercelConfiguration: Codable {
+        public var crons: [OutputConfiguration.Cron]? = nil
+    }
+
+    public var vercelConfigurationPath: Path {
+        projectDirectory.appending("vercel.json")
+    }
+
+    public func vercelConfiguration() -> VercelConfiguration? {
+        guard let data = fs.contents(atPath: vercelConfigurationPath.string) else {
+            return nil
+        }
+        guard let config = try? JSONDecoder().decode(VercelConfiguration.self, from: data) else {
+            return nil
+        }
+        return config
     }
 }
 
