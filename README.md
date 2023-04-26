@@ -9,9 +9,10 @@ A Swift runtime and SDK for Vercel Serverless Functions.
 
 ### Getting Started
 
-Check out the intoductory blog post for getting started:
+Check out the intoductory blog post and YouTube tutorial for getting started:
 
-[Deploy server side Swift applications on Vercel](https://swift.cloud/blog/deploy-server-side-swift-applications-on-vercel)
+- [YouTube: Deploy Server-Side Swift to Vercel](https://www.youtube.com/watch?v=zzBhcYbtArY)
+- [Blog: Deploy server side Swift applications on Vercel](https://swift.cloud/blog/deploy-server-side-swift-applications-on-vercel)
 
 ### How does this work?
 
