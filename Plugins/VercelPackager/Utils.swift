@@ -1,11 +1,16 @@
 //
 //  Utils.swift
-//  
+//
 //
 //  Created by Andrew Barba on 1/21/23.
 //
 
 import Foundation
+
+public enum Architecture: String {
+    case arm64 = "arm64"
+    case x86 = "x86_64"
+}
 
 public struct Utils {
 
@@ -15,5 +20,15 @@ public struct Utils {
         } else {
             return false
         }
+    }
+
+    public static var currentArchitecture: Architecture? {
+        #if arch(arm64)
+            return .arm64
+        #elseif arch(x86_64)
+            return .x86
+        #else
+            return nil
+        #endif
     }
 }
