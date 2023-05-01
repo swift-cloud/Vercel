@@ -156,22 +156,46 @@ extension VercelOutput {
     }
 
     public func localEnvironment() -> [String: String] {
+        // Lookup local .env file
         guard let data = fs.contents(atPath: projectDirectory.appending(".env").string) else {
             return [:]
         }
+
+        // Convert data to string
         guard let text = String(data: data, encoding: .utf8) else {
             return [:]
         }
-        let lines = text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-        var env: [String: String] = [:]
-        for line in lines {
-            guard line.starts(with: "#") == false else { continue }
-            let parts = line.split(separator: "=", maxSplits: 1)
-            let key = String(parts[0]).trimmingCharacters(in: .whitespacesAndNewlines)
-            let value = parts[1].trimmingCharacters(in: .whitespacesAndNewlines).dropFirst().dropLast()
-            env[key] = String(value)
+
+        // Split file into lines
+        let lines = text
+            .split(separator: "\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        return lines.reduce(into: [:]) { env, line in
+            // Ensure its not a comment
+            guard !line.starts(with: "#") else { return }
+
+            // Split the line into key value parts
+            let keyValue = line
+                .split(separator: "=", maxSplits: 1)
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+            // Ensure exactly two parts
+            guard keyValue.count == 2 else { return }
+
+            // Validate key
+            guard !keyValue[0].isEmpty else { return }
+
+            // Validate value
+            guard keyValue[1].count >= 2, keyValue[1].hasPrefix("\""), keyValue[1].hasSuffix("\"") else { return }
+
+            // Get key and value
+            let key = String(keyValue[0])
+            let value = String(keyValue[1].dropFirst().dropLast())
+
+            // Set the key and value
+            env[key] = value
         }
-        return env
     }
 }
 
