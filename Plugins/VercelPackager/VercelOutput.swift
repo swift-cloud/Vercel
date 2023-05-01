@@ -83,10 +83,13 @@ public struct VercelOutput {
         print("")
 
         Task {
+            var env = localEnvironment()
+            env["LOCAL_LAMBDA_SERVER_ENABLED"] = "true"
+
             try Shell.execute(
                 executable: context.tool(named: "swift").path,
                 arguments: ["run", "--package-path", projectDirectory.string],
-                environment: ["LOCAL_LAMBDA_SERVER_ENABLED": "true"]
+                environment: env
             )
         }
 
@@ -150,6 +153,25 @@ extension VercelOutput {
             return nil
         }
         return arguments[index + 1]
+    }
+
+    public func localEnvironment() -> [String: String] {
+        guard let data = fs.contents(atPath: projectDirectory.appending(".env").string) else {
+            return [:]
+        }
+        guard let text = String(data: data, encoding: .utf8) else {
+            return [:]
+        }
+        let lines = text.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        var env: [String: String] = [:]
+        for line in lines {
+            guard line.starts(with: "#") == false else { continue }
+            let parts = line.split(separator: "=", maxSplits: 1)
+            let key = String(parts[0]).trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = parts[1].trimmingCharacters(in: .whitespacesAndNewlines).dropFirst().dropLast()
+            env[key] = String(value)
+        }
+        return env
     }
 }
 
