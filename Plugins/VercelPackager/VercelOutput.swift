@@ -495,13 +495,6 @@ extension VercelOutput {
         let dockerToolPath = try context.tool(named: "docker").path
         let baseImage = "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
 
-        // update the underlying docker image, if necessary
-        print("updating \"\(baseImage)\" docker image")
-        try Shell.execute(
-            executable: dockerToolPath,
-            arguments: ["pull", baseImage]
-        )
-
         // get the build output path
         let buildOutputPathCommand = "swift build -c release --show-bin-path"
         let dockerBuildOutputPath = try Shell.execute(
