@@ -515,7 +515,7 @@ extension VercelOutput {
         let buildOutputPath = Path(buildPathOutput.replacingOccurrences(of: "/workspace", with: context.package.directory.string))
 
         // build the product
-        let buildCommand = "swift build -c release --product \(product.name) --static-swift-stdlib"
+        let buildCommand = "swift build -c release -Xswiftc -Osize --product \(product.name) --static-swift-stdlib"
         try Shell.execute(
             executable: dockerToolPath,
             arguments: [
