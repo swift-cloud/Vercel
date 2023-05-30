@@ -46,4 +46,35 @@ final class RequestTests: XCTestCase {
         XCTAssertEqual(req.method, .GET)
         XCTAssertEqual(req.searchParams["token"], "12345")
     }
+
+    func testPlainBody() throws {
+        let json = """
+        {
+          "method": "PUT",
+          "path": "/",
+          "headers": {},
+          "body": "hello"
+        }
+        """
+        let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: json.data(using: .utf8)!)
+        let req = Request(payload)
+        XCTAssertEqual(req.body, "hello")
+    }
+
+    func testBase64Body() throws {
+        let json = """
+        {
+          "method": "PUT",
+          "path": "/",
+          "headers": {},
+          "body": "/////w==",
+          "encoding": "base64"
+        }
+        """
+        let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: json.data(using: .utf8)!)
+        let req = Request(payload)
+        let expectData: [UInt8] = [0xff, 0xff, 0xff, 0xff]
+        XCTAssertEqual(req.rawBody, Data(expectData))
+        XCTAssertNil(req.body)
+    }
 }
