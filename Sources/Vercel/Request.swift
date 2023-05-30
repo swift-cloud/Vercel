@@ -10,16 +10,30 @@ public struct Request: Sendable {
     public let headers: HTTPHeaders
     public let path: String
     public let searchParams: [String: String]
-    public let body: String?
+    public let rawBody: Data?
 
     /// Private instance var to prevent decodable from failing
     public internal(set) var pathParams: Parameters = .init()
+
+    public var body: String? {
+        if let rawBody = rawBody {
+            return String(bytes: rawBody, encoding: .utf8)
+        }
+        
+        return nil
+    }
 
     internal init(_ payload: InvokeEvent.Payload) {
         self.method = payload.method
         self.headers = payload.headers
         self.path = payload.path
-        self.body = payload.body
+
+        if let encoding = payload.encoding, let body = payload.body, encoding == "base64" {
+            rawBody = Data(base64Encoded: body)
+        } else {
+            rawBody = payload.body?.data(using: .utf8)
+        }
+
         self.searchParams = URLComponents(string: payload.path)?
             .queryItems?
             .reduce(into: [:]) { $0[$1.name] = $1.value } ?? [:]

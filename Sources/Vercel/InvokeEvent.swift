@@ -13,6 +13,7 @@ public struct InvokeEvent: Codable, Sendable {
         public let headers: HTTPHeaders
         public let path: String
         public let body: String?
+        public let encoding: String?
     }
 
     public let body: String
