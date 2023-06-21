@@ -99,7 +99,8 @@ public struct VercelOutput {
                 arguments: [
                     projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string,
                     port
-                ]
+                ],
+                environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string]
             )
         }
 

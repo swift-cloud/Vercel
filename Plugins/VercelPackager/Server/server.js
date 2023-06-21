@@ -1,4 +1,6 @@
 const http = require('http')
+const path = require('path')
+const fs = require('fs')
 const port = Number(process.argv[2] || 7676)
 
 async function invoke(payload) {
@@ -26,11 +28,29 @@ async function readBody(stream) {
   })
 }
 
+function serveStaticFile(method, pathname) {
+  if (method.toUpperCase() !== 'GET') {
+    return false
+  }
+  try {
+    const localPath = path.join(process.env.SWIFT_PROJECT_DIRECTORY, 'public', pathname)
+    const data = fs.readFileSync(localPath)
+    res.writeHead(200, {})
+    res.end(data)
+    return true
+  } catch (err) {
+    return false
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   try {
     const method = req.method
-    const path = req.url
     const headers = req.headers
+    const path = req.url
+    if (serveStaticFile(method, path)) {
+      return
+    }
     const body = await readBody(req)
     const _res = await invoke({ method, path, headers, body })
     const _body = JSON.parse(await readBody(_res))
