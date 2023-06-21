@@ -31,8 +31,13 @@ async function readBody(stream) {
 function serveStaticFile(req, res) {
   const localPath = path.join(process.env.SWIFT_PROJECT_DIRECTORY, 'public', req.url)
   const data = fs.readFileSync(localPath)
-  res.writeHead(200, {})
-  res.end(data)
+  res.writeHead(200, {
+    'cache-control': 'public, max-age=0, must-revalidate',
+    'content-length': Buffer.byteLength(data),
+    'content-type': getContentType(localPath)
+  })
+  res.write(data)
+  res.end()
 }
 
 const server = http.createServer(async (req, res) => {
@@ -63,3 +68,26 @@ server.listen(port, () => {
     console.log('Http Server running:', `http://localhost:${port}`)
     console.log('')
 })
+
+function getContentType(path) {
+  const ext = path.split('.').pop()
+  switch (ext) {
+    case 'html':
+      return 'text/html'
+    case 'css':
+      return 'text/css'
+    case 'js':
+      return 'text/javascript'
+    case 'json':
+      return 'application/json'
+    case 'jpg':
+    case 'jpeg':
+      return 'image/jpeg'
+    case 'png':
+      return 'image/png'
+    case 'gif':
+      return 'image/gif'
+    default:
+      return 'application/octet-stream' // fallback for unknown file types
+  }
+}
