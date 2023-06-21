@@ -76,6 +76,8 @@ function getContentType(path) {
       return 'text/html'
     case 'css':
       return 'text/css'
+    case 'txt':
+      return 'text/plain'
     case 'js':
       return 'text/javascript'
     case 'json':
