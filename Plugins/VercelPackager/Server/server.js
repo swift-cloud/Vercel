@@ -34,6 +34,7 @@ function serveStaticFile(method, pathname) {
   }
   try {
     const localPath = path.join(process.env.SWIFT_PROJECT_DIRECTORY, 'public', pathname)
+    console.log({ localPath })
     const data = fs.readFileSync(localPath)
     res.writeHead(200, {})
     res.end(data)
