@@ -29,25 +29,23 @@ async function readBody(stream) {
 }
 
 function serveStaticFile(req, res) {
-  try {
-    const localPath = path.join(process.env.SWIFT_PROJECT_DIRECTORY, 'public', req.url)
-    const data = fs.readFileSync(localPath)
-    res.writeHead(200, {})
-    res.end(data)
-    return true
-  } catch (err) {
-    return false
-  }
+  const localPath = path.join(process.env.SWIFT_PROJECT_DIRECTORY, 'public', req.url)
+  const data = fs.readFileSync(localPath)
+  res.writeHead(200, {})
+  res.end(data)
 }
 
 const server = http.createServer(async (req, res) => {
   try {
+    serveStaticFile(req, res)
+    return
+  } catch (err) {
+    // ignore
+  }
+  try {
     const method = req.method
-    const headers = req.headers
     const path = req.url
-    if (serveStaticFile(req, res)) {
-      return
-    }
+    const headers = req.headers
     const body = await readBody(req)
     const _res = await invoke({ method, path, headers, body })
     const _body = JSON.parse(await readBody(_res))
