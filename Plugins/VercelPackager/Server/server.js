@@ -28,15 +28,10 @@ async function readBody(stream) {
   })
 }
 
-function serveStaticFile(method, pathname) {
-  if (method.toUpperCase() !== 'GET') {
-    return false
-  }
+function serveStaticFile(req, res) {
   try {
-    const localPath = path.join(process.env.SWIFT_PROJECT_DIRECTORY, 'public', pathname)
-    console.log({ localPath })
+    const localPath = path.join(process.env.SWIFT_PROJECT_DIRECTORY, 'public', req.url)
     const data = fs.readFileSync(localPath)
-    console.log({ data })
     res.writeHead(200, {})
     res.end(data)
     return true
@@ -50,7 +45,7 @@ const server = http.createServer(async (req, res) => {
     const method = req.method
     const headers = req.headers
     const path = req.url
-    if (serveStaticFile(method, path)) {
+    if (serveStaticFile(req, res)) {
       return
     }
     const body = await readBody(req)
