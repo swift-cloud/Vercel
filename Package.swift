@@ -18,6 +18,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/vapor/vapor", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-crypto", "1.0.0" ..< "3.0.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.13.0"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.1")
     ],
     targets: [
@@ -27,7 +28,9 @@ let package = Package(
         ]),
         .target(name: "VercelVapor", dependencies: [
             "Vercel",
-            .product(name: "Vapor", package: "vapor")
+            .product(name: "Vapor", package: "vapor"),
+            .product(name: "NIO", package: "swift-nio"),
+            .product(name: "NIOHTTP1", package: "swift-nio"),
         ]),
         .plugin(
             name: "VercelPackager",
