@@ -12,21 +12,35 @@ import Vercel
 
 public protocol VaporHandler: RequestHandler {
 
-    static var app: Application { get }
+    static func configure() async throws -> Application
 }
 
 extension VaporHandler {
 
     public static func setup() async throws {
+        // Request vapor application from user code
+        let app = try await configure()
+        // Configure vercel server
         app.servers.use(.vercel)
+        // Start the application
         try app.start()
+        // Cache the app instance
+        VercelShared.app = app
     }
 
     public func onRequest(_ req: Vercel.Request) async throws -> Vercel.Response {
-        let vaporRequest = try Vapor.Request(req: req, for: Self.app)
-        let vaporResponse = try await Self.app.responder.respond(to: vaporRequest).get()
+        guard let app = VercelShared.app else {
+            return .status(.serviceUnavailable).send("Vapor application not configured")
+        }
+        let vaporRequest = try Vapor.Request(req: req, for: app)
+        let vaporResponse = try await app.responder.respond(to: vaporRequest).get()
         return try await Vercel.Response.from(response: vaporResponse, on: req.context!.eventLoop).get()
     }
+}
+
+fileprivate struct VercelShared {
+
+    static var app: Application?
 }
 
 public final class VercelServer: Server {
