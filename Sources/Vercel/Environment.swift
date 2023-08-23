@@ -5,6 +5,8 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
+import AWSLambdaRuntime
+
 public struct VercelEnvironment: Sendable {
 
     public static func get(_ key: String) -> String? {
