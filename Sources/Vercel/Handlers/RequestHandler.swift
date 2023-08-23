@@ -5,6 +5,8 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
+import AWSLambdaRuntime
+
 public protocol RequestHandler: SimpleLambdaHandler {
 
     func onRequest(_ req: Request) async throws -> Response

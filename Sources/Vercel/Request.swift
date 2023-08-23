@@ -5,6 +5,8 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
+import AWSLambdaRuntime
+
 public struct Request: Sendable {
     public let method: HTTPMethod
     public let headers: HTTPHeaders

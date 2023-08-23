@@ -7,8 +7,8 @@
 
 import NIO
 import NIOHTTP1
-@_exported import Vapor
-@_exported import Vercel
+import Vapor
+import Vercel
 
 public protocol VaporHandler: RequestHandler {
 
