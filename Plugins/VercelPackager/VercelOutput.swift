@@ -502,7 +502,7 @@ extension VercelOutput {
             executable: dockerToolPath,
             arguments: [
                 "run",
-                "--platform", "linux/x86_64",
+                "--platform", "linux/\(Utils.currentArchitecture!.rawValue)",
                 "--rm",
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
@@ -521,7 +521,7 @@ extension VercelOutput {
             executable: dockerToolPath,
             arguments: [
                 "run",
-                "--platform", "linux/x86_64",
+                "--platform", "linux/\(Utils.currentArchitecture!.rawValue)",
                 "--rm",
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
