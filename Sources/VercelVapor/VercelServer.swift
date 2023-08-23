@@ -17,9 +17,20 @@ public protocol VaporHandler: RequestHandler {
 
 extension VaporHandler {
 
+    public var app: Application {
+        Self.app
+    }
+
+    public init() {
+        self.init()
+        app.servers.use(.vercel)
+        try? app.start()
+        app.logger.log(level: .info, "SETTING SERVER")
+    }
+
     public func onRequest(_ req: Vercel.Request) async throws -> Vercel.Response {
-        let vaporRequest = try Vapor.Request(req: req, for: Self.app)
-        let vaporResponse = try await Self.app.responder.respond(to: vaporRequest).get()
+        let vaporRequest = try Vapor.Request(req: req, for: app)
+        let vaporResponse = try await app.responder.respond(to: vaporRequest).get()
         return try await Vercel.Response.from(response: vaporResponse, on: req.context!.eventLoop).get()
     }
 }

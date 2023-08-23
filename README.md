@@ -71,13 +71,9 @@ struct App: VaporHandler {
     static let app: Application = {
         let app = Application()
 
-        app.get { req in
-            return Response(body: "Hello, Vapor")
+        app.get { _ in
+            "Hello, Vapor"
         }
-
-        app.servers.use(.vercel)
-
-        try? app.start()
 
         return app
     }()
