@@ -68,7 +68,7 @@ import VercelVapor
 @main
 struct App: VaporHandler {
 
-    static let app: Application = {
+    static func configure() async throws -> Application {
         let app = Application()
 
         app.get { _ in
@@ -76,7 +76,7 @@ struct App: VaporHandler {
         }
 
         return app
-    }()
+    }
 }
 ```
 
