@@ -12,6 +12,7 @@ let package = Package(
     ],
     products: [
         .library(name: "Vercel", targets: ["Vercel"]),
+        .library(name: "VercelVapor", targets: ["VercelVapor"]),
         .plugin(name: "VercelPackager", targets: ["VercelPackager"])
     ],
     dependencies: [
