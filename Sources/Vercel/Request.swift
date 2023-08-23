@@ -11,6 +11,7 @@ public struct Request: Sendable {
     public let path: String
     public let searchParams: [String: String]
     public let rawBody: Data?
+    public let context: LambdaContext?
 
     /// Private instance var to prevent decodable from failing
     public internal(set) var pathParams: Parameters = .init()
@@ -23,10 +24,26 @@ public struct Request: Sendable {
         return nil
     }
 
-    internal init(_ payload: InvokeEvent.Payload) {
+    public var search: String? {
+        var components: [(String, String)] = []
+
+        for (key, value) in searchParams {
+            if let encodedKey = key.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+               let encodedValue = value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) {
+                components.append((encodedKey, encodedValue))
+            } else {
+                return nil
+            }
+        }
+
+        return components.map { "\($0)=\($1)" }.joined(separator: "&")
+    }
+
+    internal init(_ payload: InvokeEvent.Payload, in context: LambdaContext? = nil) {
         self.method = payload.method
         self.headers = payload.headers
         self.path = payload.path
+        self.context = context
 
         if let encoding = payload.encoding, let body = payload.body, encoding == "base64" {
             rawBody = Data(base64Encoded: body)

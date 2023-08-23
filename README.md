@@ -59,6 +59,26 @@ struct App: ExpressHandler {
 }
 ```
 
+### Vapor Handler
+
+```swift
+import VercelVapor
+
+let app = Application()
+
+// setup
+
+@main
+struct App: VaporHandler {
+
+    static let app = app
+}
+
+app.servers.use(.vercel)
+
+try app.server.start()
+```
+
 ### Data Fetching
 
 You can use any popular library to fetch data such as Alamofire or async-http-client but we also provide a convenient `fetch()` method directly in this package:

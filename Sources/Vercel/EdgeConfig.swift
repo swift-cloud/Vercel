@@ -11,7 +11,7 @@ private let edgeConfigIdPrefix = "ecfg_"
 
 public struct EdgeConfig: Sendable {
 
-    public static let `default` = try! EdgeConfig(Vercel.Environment.edgeConfig)
+    public static let `default` = try! EdgeConfig(VercelEnvironment.edgeConfig)
 
     public let id: String
 
@@ -67,7 +67,7 @@ extension EdgeConfig {
             }
             return id
         }
-        if let value = Vercel.Environment[input] {
+        if let value = VercelEnvironment[input] {
             return try parseConfigID(value)
         }
         throw EdgeConfigError.invalidConnection

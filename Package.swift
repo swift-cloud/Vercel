@@ -15,6 +15,7 @@ let package = Package(
         .plugin(name: "VercelPackager", targets: ["VercelPackager"])
     ],
     dependencies: [
+        .package(url: "https://github.com/vapor/vapor", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-crypto", "1.0.0" ..< "3.0.0"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.1")
     ],
@@ -22,6 +23,10 @@ let package = Package(
         .target(name: "Vercel", dependencies: [
             .product(name: "Crypto", package: "swift-crypto"),
             .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime")
+        ]),
+        .target(name: "VercelVapor", dependencies: [
+            "Vercel",
+            .product(name: "Vapor", package: "vapor")
         ]),
         .plugin(
             name: "VercelPackager",

@@ -5,30 +5,26 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
-import AWSLambdaRuntime
+public struct VercelEnvironment: Sendable {
 
-extension Vercel {
-    public struct Environment: Sendable {
+    public static func get(_ key: String) -> String? {
+        return Lambda.env(key)
+    }
 
-        public static func get(_ key: String) -> String? {
-            return Lambda.env(key)
-        }
+    public static func get(_ key: String, default value: String) -> String {
+        return Lambda.env(key) ?? value
+    }
 
-        public static func get(_ key: String, default value: String) -> String {
-            return Lambda.env(key) ?? value
-        }
+    public static subscript(key: String) -> String? {
+        return get(key)
+    }
 
-        public static subscript(key: String) -> String? {
-            return get(key)
-        }
-
-        public static subscript(key: String, default value: String) -> String {
-            return get(key, default: value)
-        }
+    public static subscript(key: String, default value: String) -> String {
+        return get(key, default: value)
     }
 }
 
-extension Vercel.Environment {
+extension VercelEnvironment {
 
     public static var edgeConfig = Self["EDGE_CONFIG"]!
 
