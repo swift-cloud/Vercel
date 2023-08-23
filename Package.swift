@@ -24,10 +24,12 @@ let package = Package(
     targets: [
         .target(name: "Vercel", dependencies: [
             .product(name: "Crypto", package: "swift-crypto"),
-            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime")
+            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
+            .product(name: "NIOCore", package: "swift-nio")
         ]),
         .target(name: "VercelVapor", dependencies: [
             "Vercel",
+            .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
             .product(name: "Vapor", package: "vapor"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOHTTP1", package: "swift-nio"),
