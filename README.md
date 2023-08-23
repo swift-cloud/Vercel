@@ -62,21 +62,26 @@ struct App: ExpressHandler {
 ### Vapor Handler
 
 ```swift
+import Vapor
 import VercelVapor
-
-let app = Application()
-
-// setup
 
 @main
 struct App: VaporHandler {
 
-    static let app = app
+    static let app: Application = {
+        let app = Application()
+
+        app.get { req in
+            return Response(body: "Hello, Vapor")
+        }
+
+        app.servers.use(.vercel)
+
+        try? app.start()
+
+        return app
+    }()
 }
-
-app.servers.use(.vercel)
-
-try app.server.start()
 ```
 
 ### Data Fetching
