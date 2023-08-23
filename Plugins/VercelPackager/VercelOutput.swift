@@ -149,6 +149,13 @@ extension VercelOutput {
         argument("port") ?? "7676"
     }
 
+    public var architecture: Architecture {
+        if let value = argument("arch"), let arch = Architecture(rawValue: value) {
+            return arch
+        }
+        return Utils.currentArchitecture ?? .x86
+    }
+
     public func argument(_ key: String) -> String? {
         guard let index = arguments.firstIndex(of: "--\(key)") else {
             return nil
@@ -502,7 +509,7 @@ extension VercelOutput {
             executable: dockerToolPath,
             arguments: [
                 "run",
-                "--platform", "linux/\(Utils.currentArchitecture!.rawValue)",
+                "--platform", "linux/\(architecture.rawValue)",
                 "--rm",
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
@@ -521,7 +528,7 @@ extension VercelOutput {
             executable: dockerToolPath,
             arguments: [
                 "run",
-                "--platform", "linux/\(Utils.currentArchitecture!.rawValue)",
+                "--platform", "linux/\(architecture.rawValue)",
                 "--rm",
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
