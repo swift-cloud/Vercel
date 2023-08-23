@@ -183,5 +183,5 @@ jobs:
         run: npm install -g vercel@latest
 
       - name: Deploy
-        run: swift package --disable-sandbox vercel --deploy
+        run: swift package --disable-sandbox vercel deploy
 ```
