@@ -5,6 +5,7 @@
 //  Created by Andrew Barba on 8/22/23.
 //
 
+import AWSLambdaRuntime
 import NIO
 import NIOHTTP1
 import Vapor
@@ -12,14 +13,21 @@ import Vercel
 
 public protocol VaporHandler: RequestHandler {
 
-    static func configure() async throws -> Application
+    static var environment: Environment { get }
+
+    static func configure(app: Application) async throws
 }
 
 extension VaporHandler {
 
-    public static func setup() async throws {
+    public static var environment: Environment {
+        .development
+    }
+
+    public static func setup(context: LambdaInitializationContext) async throws {
+        let app = Application(environment, .shared(context.eventLoop))
         // Request vapor application from user code
-        let app = try await configure()
+        try await configure(app: app)
         // Configure vercel server
         app.servers.use(.vercel)
         // Start the application
@@ -153,7 +161,7 @@ extension Vercel.Response {
 
                 // Done
                 return Vercel.Response(
-                    statusCode: .init(code: response.status.code, reasonPhrase: response.status.reasonPhrase),
+                    statusCode: statusCode,
                     headers: headers,
                     body: bytes.base64String(),
                     isBase64Encoded: true
