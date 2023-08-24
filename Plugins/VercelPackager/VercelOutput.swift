@@ -482,7 +482,7 @@ extension VercelOutput {
     private func buildNativeProduct(_ product: Product) async throws -> Path {
         var parameters = PackageManager.BuildParameters()
         parameters.configuration = .release
-        parameters.otherSwiftcFlags = Utils.isAmazonLinux ? ["-static-stdlib"] : []
+        parameters.otherSwiftcFlags = Utils.isAmazonLinux ? ["-static-stdlib", "-Osize"] : ["-Osize"]
         parameters.logging = .concise
 
         let result = try packageManager.build(
@@ -504,9 +504,10 @@ extension VercelOutput {
     private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
         let baseImage = "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
+        let buildCommand = "swift build -c release -Xswiftc -Osize --product \(product.name) --static-swift-stdlib"
 
         // get the build output path
-        let buildOutputPathCommand = "swift build -c release --show-bin-path"
+        let buildOutputPathCommand = "\(buildCommand) --show-bin-path"
         let dockerBuildOutputPath = try Shell.execute(
             executable: dockerToolPath,
             arguments: [
@@ -525,7 +526,6 @@ extension VercelOutput {
         let buildOutputPath = Path(buildPathOutput.replacingOccurrences(of: "/workspace", with: context.package.directory.string))
 
         // build the product
-        let buildCommand = "swift build -c release -Xswiftc -Osize --product \(product.name) --static-swift-stdlib"
         try Shell.execute(
             executable: dockerToolPath,
             arguments: [
