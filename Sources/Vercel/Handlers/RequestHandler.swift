@@ -12,7 +12,7 @@ public protocol RequestHandler: EventLoopLambdaHandler where Event == InvokeEven
 
     func onRequest(_ req: Request) async throws -> Response
 
-    static func setup() async throws
+    static func setup(context: LambdaInitializationContext) async throws
 
     init()
 }
@@ -28,11 +28,11 @@ extension RequestHandler {
         }
     }
 
-    public static func setup() async throws {}
+    public static func setup(context: LambdaInitializationContext) async throws {}
 
     public static func makeHandler(context: LambdaInitializationContext) -> EventLoopFuture<Self> {
         return context.eventLoop.makeFutureWithTask {
-            try await setup()
+            try await setup(context: context)
             return Self()
         }
     }
