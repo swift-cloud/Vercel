@@ -482,6 +482,7 @@ extension VercelOutput {
     private func buildNativeProduct(_ product: Product) async throws -> Path {
         var parameters = PackageManager.BuildParameters()
         parameters.configuration = .release
+        parameters.otherLinkerFlags = ["-S", "-dead_strip"]
         parameters.otherSwiftcFlags = Utils.isAmazonLinux ? ["-static-stdlib", "-Osize"] : ["-Osize"]
         parameters.logging = .concise
 
