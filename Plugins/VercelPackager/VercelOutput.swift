@@ -41,11 +41,10 @@ public struct VercelOutput {
     }
 
     public func build() async throws {
-        for product in deployableProducts {
-            let artifactPath = try await buildProduct(product)
-            let bootstrapPath = vercelFunctionDirectory(product).appending("bootstrap")
-            try fs.copyItem(atPath: artifactPath.string, toPath: bootstrapPath.string)
-        }
+        let product = self.product
+        let artifactPath = try await buildProduct(product)
+        let bootstrapPath = vercelFunctionDirectory(product).appending("bootstrap")
+        try fs.copyItem(atPath: artifactPath.string, toPath: bootstrapPath.string)
     }
 
     public func deploy() async throws {
