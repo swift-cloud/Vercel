@@ -41,7 +41,6 @@ public struct VercelOutput {
     }
 
     public func build() async throws {
-        let product = self.product
         let artifactPath = try await buildProduct(product)
         let bootstrapPath = vercelFunctionDirectory(product).appending("bootstrap")
         try fs.copyItem(atPath: artifactPath.string, toPath: bootstrapPath.string)
@@ -256,9 +255,7 @@ extension VercelOutput {
         try fs.createDirectory(atPath: vercelOutputDirectory.string, withIntermediateDirectories: true)
         try fs.createDirectory(atPath: vercelFunctionsDirectory.string, withIntermediateDirectories: true)
         // Create directories for each product
-        for product in deployableProducts {
-            try fs.createDirectory(atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
-        }
+        try fs.createDirectory(atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
     }
 }
 
@@ -416,15 +413,13 @@ extension VercelOutput {
     }
 
     public func writeFunctionConfigurations() throws {
-        for product in deployableProducts {
-            let config = FunctionConfiguration(
-                memory: .init(functionMemory),
-                maxDuration: .init(functionDuration),
-                regions: functionRegions?.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            )
-            let data = try encoder.encode(config)
-            fs.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
-        }
+        let config = FunctionConfiguration(
+            memory: .init(functionMemory),
+            maxDuration: .init(functionDuration),
+            regions: functionRegions?.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        )
+        let data = try encoder.encode(config)
+        fs.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
     }
 }
 
