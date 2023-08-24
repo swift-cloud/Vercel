@@ -116,7 +116,7 @@ extension VercelOutput {
 
     public var product: Product {
         if let name = argument("product") {
-            return deployableProducts.first { $0.name == name }!
+            return context.package.products.first { $0.name == name }!
         }
         return deployableProducts[0]
     }
