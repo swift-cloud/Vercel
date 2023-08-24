@@ -31,7 +31,7 @@ import Vercel
 @main
 struct App: RequestHandler {
 
-    func onRequest(_ req: Request, context: Context) async throws -> Response {
+    func onRequest(_ req: Request) async throws -> Response {
         let greeting = EdgeConfig.default.get("greeting").string!
         return .status(.ok).send("Hello, \(greeting)")
     }
@@ -46,16 +46,18 @@ import Vercel
 @main
 struct App: ExpressHandler {
 
-    static let router = Router()
-        .get("/") { req, res in
-            res.status(.ok).send("Hello, Swift")
-        }
-        .get("/api/me") { req, res in
-            try res.cors().send(["name": "Andrew"])
-        }
-        .get("/hello/:name") { req, res in
-            res.send("Hello, " + req.pathParams["name"]!)
-        }
+    static func configure() async throws -> Router {
+        Router()
+            .get("/") { req, res in
+                res.status(.ok).send("Hello, Swift")
+            }
+            .get("/api/me") { req, res in
+                try res.cors().send(["name": "Andrew"])
+            }
+            .get("/hello/:name") { req, res in
+                res.send("Hello, " + req.pathParams["name"]!)
+            }
+    }
 }
 ```
 
