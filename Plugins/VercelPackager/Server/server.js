@@ -64,11 +64,7 @@ const server = http.createServer(async (req, res) => {
   }
 })
 
-server.listen(port, () => {
-    console.log('')
-    console.log('Http Server running:', `http://localhost:${port}`)
-    console.log('')
-})
+server.listen(port, () => {})
 
 function getContentType(path) {
   const ext = path.split('.').pop()
