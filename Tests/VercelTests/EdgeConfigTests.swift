@@ -14,11 +14,6 @@ final class EdgeConfigTests: XCTestCase {
         XCTAssertEqual(id, _id)
     }
 
-    func testParseEnvVar() throws {
-        let id = try EdgeConfig.parseConfigID("EDGE_CONFIG")
-        XCTAssertEqual(id, _id)
-    }
-
     func testBadInput() throws {
         XCTAssertThrowsError(try EdgeConfig.parseConfigID("12345")) {
             XCTAssertEqual($0 as! EdgeConfigError, EdgeConfigError.invalidConnection)

@@ -7,27 +7,35 @@
 
 public protocol ExpressHandler: RequestHandler {
 
-    static func configure() async throws -> Router
+    static var basePath: String { get }
+
+    static func configure(router: Router) async throws
 }
 
 extension ExpressHandler {
 
+    public static var basePath: String {
+        return "/"
+    }
+
     public static func setup() async throws {
-        // Request vapor application from user code
-        let router = try await configure()
+        // Create the router
+        let router = Router(prefix: basePath)
+        // Configure router in user code
+        try await configure(router: router)
         // Cache the app instance
-        ExpressShared.router = router
+        Shared.router = router
     }
 
     public func onRequest(_ req: Request) async throws -> Response {
-        guard let router = ExpressShared.router else {
+        guard let router = Shared.router else {
             return .status(.serviceUnavailable).send("Express router not configured")
         }
         return try await router.run(req)
     }
 }
 
-fileprivate struct ExpressShared {
+fileprivate struct Shared {
 
     static var router: Router?
 }

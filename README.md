@@ -46,17 +46,10 @@ import Vercel
 @main
 struct App: ExpressHandler {
 
-    static func configure() async throws -> Router {
-        Router()
-            .get("/") { req, res in
-                res.status(.ok).send("Hello, Swift")
-            }
-            .get("/api/me") { req, res in
-                try res.cors().send(["name": "Andrew"])
-            }
-            .get("/hello/:name") { req, res in
-                res.send("Hello, " + req.pathParams["name"]!)
-            }
+    static func configure(router: Router) async throws {
+        router.get("/") { req, res in
+            res.status(.ok).send("Hello, Swift")
+        }
     }
 }
 ```
@@ -70,14 +63,10 @@ import VercelVapor
 @main
 struct App: VaporHandler {
 
-    static func configure() async throws -> Application {
-        let app = Application()
-
+    static func configure(app: Application) async throws {
         app.get { _ in
             "Hello, Vapor"
         }
-
-        return app
     }
 }
 ```

@@ -8,12 +8,12 @@
 import AWSLambdaRuntime
 
 public struct Request: Sendable {
+    public let context: LambdaContext
     public let method: HTTPMethod
     public let headers: HTTPHeaders
     public let path: String
     public let searchParams: [String: String]
     public let rawBody: Data?
-    public let context: LambdaContext?
 
     /// Private instance var to prevent decodable from failing
     public internal(set) var pathParams: Parameters = .init()
@@ -41,7 +41,7 @@ public struct Request: Sendable {
         return components.map { "\($0)=\($1)" }.joined(separator: "&")
     }
 
-    internal init(_ payload: InvokeEvent.Payload, in context: LambdaContext? = nil) {
+    internal init(_ payload: InvokeEvent.Payload, in context: LambdaContext) {
         self.method = payload.method
         self.headers = payload.headers
         self.path = payload.path

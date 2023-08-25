@@ -1,5 +1,15 @@
+import AWSLambdaRuntime
 import XCTest
 @testable import Vercel
+
+let context = LambdaContext.__forTestsOnly(
+    requestID: "", 
+    traceID: "", 
+    invokedFunctionARN: "", 
+    timeout: .seconds(10), 
+    logger: .init(label: ""), 
+    eventLoop: .singletonMultiThreadedEventLoopGroup.next()
+)
 
 final class RequestTests: XCTestCase {
     func testSimpleDecode() throws {
@@ -11,7 +21,7 @@ final class RequestTests: XCTestCase {
         }
         """
         let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: json.data(using: .utf8)!)
-        let req = Request(payload)
+        let req = Request(payload, in: context)
         XCTAssertEqual(req.method, .GET)
     }
 
@@ -27,7 +37,7 @@ final class RequestTests: XCTestCase {
         }
         """
         let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: json.data(using: .utf8)!)
-        let req = Request(payload)
+        let req = Request(payload, in: context)
         XCTAssertEqual(req.method, .GET)
         XCTAssertEqual(req.headers["a"]!.value, "1")
         XCTAssertEqual(req.headers["b"]!.value, "2")
@@ -42,7 +52,7 @@ final class RequestTests: XCTestCase {
         }
         """
         let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: json.data(using: .utf8)!)
-        let req = Request(payload)
+        let req = Request(payload, in: context)
         XCTAssertEqual(req.method, .GET)
         XCTAssertEqual(req.searchParams["token"], "12345")
     }
@@ -57,7 +67,7 @@ final class RequestTests: XCTestCase {
         }
         """
         let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: json.data(using: .utf8)!)
-        let req = Request(payload)
+        let req = Request(payload, in: context)
         XCTAssertEqual(req.body, "hello")
     }
 
@@ -72,7 +82,7 @@ final class RequestTests: XCTestCase {
         }
         """
         let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: json.data(using: .utf8)!)
-        let req = Request(payload)
+        let req = Request(payload, in: context)
         let expectData: [UInt8] = [0xff, 0xff, 0xff, 0xff]
         XCTAssertEqual(req.rawBody, Data(expectData))
         XCTAssertNil(req.body)
