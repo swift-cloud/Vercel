@@ -76,9 +76,14 @@ public struct VercelOutput {
     public func dev() async throws {
         print("")
         print("-------------------------------------------------------------------------")
-        print("Starting dev server: http://localhost:\(port)")
+        print("Building application")
         print("-------------------------------------------------------------------------")
         print("")
+
+        try Shell.execute(
+            executable: context.tool(named: "swift").path,
+            arguments: ["build", "--package-path", projectDirectory.string]
+        )
 
         Task {
             var env = localEnvironment()
@@ -101,6 +106,14 @@ public struct VercelOutput {
                 environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string]
             )
         }
+
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+
+        print("")
+        print("-------------------------------------------------------------------------")
+        print("Running dev server: http://localhost:\(port)")
+        print("-------------------------------------------------------------------------")
+        print("")
 
         while true {
             try await Task.sleep(nanoseconds: 1_000_000_000_000)
