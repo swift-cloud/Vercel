@@ -54,8 +54,9 @@ const server = http.createServer(async (req, res) => {
     const body = await readBody(req)
     const _res = await invoke({ method, path, headers, body })
     const _body = JSON.parse(await readBody(_res))
+    console.log(_body)
     res.writeHead(_body.statusCode, _body.headers)
-    res.end(_body.body)
+    res.end(Buffer.from(_body.body || '', _body.isBase64Encoded ? 'base64' : 'utf8'))
   } catch (err) {
     console.error(err)
     res.writeHead(500, {})
