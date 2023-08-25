@@ -6,10 +6,14 @@
 //
 
 public struct Response: Codable, Sendable {
+    public enum Encoding: String, Codable, Sendable {
+        case base64
+    }
+
     public var statusCode: HTTPResponseStatus
     public var headers: HTTPHeaders?
     public var body: String?
-    public var isBase64Encoded: Bool?
+    public var encoding: Encoding?
     public var cookies: [String]?
 
     public var didSend: Bool {
@@ -20,13 +24,13 @@ public struct Response: Codable, Sendable {
         statusCode: HTTPResponseStatus = .ok,
         headers: HTTPHeaders? = nil,
         body: String? = nil,
-        isBase64Encoded: Bool? = nil,
+        encoding: Encoding? = nil,
         cookies: [String]? = nil
     ) {
         self.statusCode = statusCode
         self.headers = headers
         self.body = body
-        self.isBase64Encoded = isBase64Encoded
+        self.encoding = encoding
         self.cookies = cookies
     }
 
@@ -34,14 +38,14 @@ public struct Response: Codable, Sendable {
         statusCode: HTTPResponseStatus? = nil,
         headers: HTTPHeaders? = nil,
         body: String? = nil,
-        isBase64Encoded: Bool? = nil,
+        encoding: Encoding? = nil,
         cookies: [String]? = nil
     ) -> Self {
         return .init(
             statusCode: statusCode ?? self.statusCode,
             headers: headers ?? self.headers,
             body: body ?? self.body,
-            isBase64Encoded: isBase64Encoded ?? self.isBase64Encoded,
+            encoding: encoding ?? self.encoding,
             cookies: cookies ?? self.cookies
         )
     }
@@ -124,11 +128,11 @@ extension Response {
     }
 
     public func send(_ data: Data) -> Self {
-        return with(body: data.base64EncodedString(), isBase64Encoded: true)
+        return with(body: data.base64EncodedString(), encoding: .base64)
     }
 
     public func send(_ bytes: [UInt8]) -> Self {
-        return with(body: Data(bytes).base64EncodedString(), isBase64Encoded: true)
+        return with(body: Data(bytes).base64EncodedString(), encoding: .base64)
     }
 
     public func send<T>(

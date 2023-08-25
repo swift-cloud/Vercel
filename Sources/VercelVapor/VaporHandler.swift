@@ -105,7 +105,7 @@ extension Vercel.Response {
                 statusCode: statusCode,
                 headers: headers,
                 body: bytes?.base64String(),
-                isBase64Encoded: true
+                encoding: bytes.map { _ in .base64 }
             )
         }
 
