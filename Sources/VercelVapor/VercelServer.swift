@@ -33,37 +33,34 @@ extension VaporHandler {
         // Start the application
         try app.start()
         // Cache the app instance
-        VercelShared.app = app
+        Shared.app = app
     }
 
     public func onRequest(_ req: Vercel.Request) async throws -> Vercel.Response {
-        guard let app = VercelShared.app else {
+        guard let app = Shared.app else {
             return .status(.serviceUnavailable).send("Vapor application not configured")
         }
         let vaporRequest = try Vapor.Request(req: req, for: app)
         let vaporResponse = try await app.responder.respond(to: vaporRequest).get()
-        return try await Vercel.Response.from(response: vaporResponse, on: req.context!.eventLoop).get()
+        return try await Vercel.Response.from(response: vaporResponse, on: app.eventLoopGroup.next()).get()
     }
 }
 
-fileprivate struct VercelShared {
+fileprivate struct Shared {
 
     static var app: Application?
 }
 
 public final class VercelServer: Server {
 
-    private let application: Application
+    private let app: Application
 
-    private let eventLoop: EventLoop
-
-    public init(application: Application) {
-        self.application = application
-        self.eventLoop = application.eventLoopGroup.next()
+    public init(app: Application) {
+        self.app = app
     }
 
     public var onShutdown: EventLoopFuture<Void> {
-        return eventLoop.makeSucceededVoidFuture()
+        return app.eventLoopGroup.next().makeSucceededVoidFuture()
     }
 
     public func start(hostname _: String?, port _: Int?) throws {
@@ -79,25 +76,23 @@ extension Application.Servers.Provider {
     public static var vercel: Self {
         .init {
             $0.servers.use { app in
-                VercelServer(application: app)
+                VercelServer(app: app)
             }
         }
     }
 }
 
 extension Vapor.Request {
-    private static let bufferAllocator = ByteBufferAllocator()
 
-    convenience init(req: Vercel.Request, for application: Application) throws {
-        var buffer: NIO.ByteBuffer?
-        if let data = req.rawBody {
-            buffer = Self.bufferAllocator.buffer(capacity: data.count)
-            buffer!.writeBytes(data)
+    convenience init(req: Vercel.Request, for app: Application) throws {
+        let buffer = req.rawBody.map { data in
+            var _buffer = req.context.allocator.buffer(capacity: data.count)
+            _buffer.writeBytes(data)
+            return _buffer
         }
 
-        var nioHeaders = NIOHTTP1.HTTPHeaders()
-        req.headers.forEach { key, value in
-            nioHeaders.add(name: key, value: value.value)
+        let nioHeaders = req.headers.reduce(into: NIOHTTP1.HTTPHeaders()) {
+            $0.add(name: $1.key, value: $1.value.value)
         }
 
         var url: String = req.path
@@ -107,15 +102,15 @@ extension Vapor.Request {
         }
 
         self.init(
-            application: application,
+            application: app,
             method: NIOHTTP1.HTTPMethod(rawValue: req.method.rawValue),
             url: Vapor.URI(path: url),
             version: HTTPVersion(major: 1, minor: 1),
             headers: nioHeaders,
             collectedBody: buffer,
             remoteAddress: nil,
-            logger: req.context!.logger,
-            on: req.context!.eventLoop
+            logger: app.logger,
+            on: app.eventLoopGroup.next()
         )
     }
 }
