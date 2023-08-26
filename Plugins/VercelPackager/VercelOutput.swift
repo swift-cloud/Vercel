@@ -67,6 +67,8 @@ public struct VercelOutput {
             deployArguments.append(token)
         }
 
+        deployArguments.append("FORCE_BUILD_IN_REGION=lhr")
+
         try Shell.execute(
             executable: context.tool(named: "vercel").path,
             arguments: deployArguments,
