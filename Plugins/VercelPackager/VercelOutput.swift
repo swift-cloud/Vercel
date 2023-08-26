@@ -377,11 +377,11 @@ extension VercelOutput {
         let vercel = vercelConfiguration()
         let routes: [OutputConfiguration.Route] = [
             // Remove trailing slash
-            .init(src: "^/(.*)/$", headers: ["Location": "/$1"], status: 308),
+            .init(src: "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$", headers: ["Location": "/$1"], status: 308),
             // Handle filesystem
             .init(handle: "filesystem"),
             // Proxy all other routes
-            .init(src: "^(?:/(.*))$", dest: product.name, check: true)
+            .init(src: "^.*$", dest: product.name, check: true)
         ]
         let config = OutputConfiguration(
             routes: routes,
