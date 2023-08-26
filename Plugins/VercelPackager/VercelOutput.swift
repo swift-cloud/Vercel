@@ -54,8 +54,6 @@ public struct VercelOutput {
         print("")
 
         var deployArguments = [
-            "-b",
-            "FORCE_BUILD_IN_REGION=lhr",
             "deploy",
             "--prebuilt"
         ]
@@ -72,7 +70,7 @@ public struct VercelOutput {
         try Shell.execute(
             executable: context.tool(named: "vercel").path,
             arguments: deployArguments,
-            environment: ["FORCE_BUILD_IN_REGION": "lhr"]
+            environment: ["FORCE_BUILD_IN_REGION": "lhr", "VERCEL_DEBUG": "1"]
         )
     }
 
