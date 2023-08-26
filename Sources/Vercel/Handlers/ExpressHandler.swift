@@ -5,6 +5,8 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
+import AWSLambdaRuntime
+
 public protocol ExpressHandler: RequestHandler {
 
     static var basePath: String { get }
@@ -18,7 +20,7 @@ extension ExpressHandler {
         return "/"
     }
 
-    public static func setup() async throws {
+    public static func setup(context: LambdaInitializationContext) async throws {
         // Create the router
         let router = Router(prefix: basePath)
         // Configure router in user code
