@@ -69,7 +69,8 @@ public struct VercelOutput {
 
         try Shell.execute(
             executable: context.tool(named: "vercel").path,
-            arguments: deployArguments
+            arguments: deployArguments,
+            environment: ["FORCE_BUILD_IN_REGION": "lhr"]
         )
     }
 
