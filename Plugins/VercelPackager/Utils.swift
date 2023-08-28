@@ -8,7 +8,7 @@
 import Foundation
 import PackagePlugin
 
-public enum Architecture: String {
+public enum Architecture: String, Codable {
     case arm64 = "arm64"
     case x86 = "x86_64"
 }

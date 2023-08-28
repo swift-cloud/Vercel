@@ -160,6 +160,13 @@ extension VercelOutput {
         argument("port") ?? "7676"
     }
 
+    public var architecture: Architecture {
+        if let value = argument("arch"), let arch = Architecture(rawValue: value) {
+            return arch
+        }
+        return Utils.currentArchitecture ?? .x86
+    }
+
     public func argument(_ key: String) -> String? {
         guard let index = arguments.firstIndex(of: "--\(key)") else {
             return nil
@@ -368,11 +375,11 @@ extension VercelOutput {
         let vercel = vercelConfiguration()
         let routes: [OutputConfiguration.Route] = [
             // Remove trailing slash
-            .init(src: "^/(.*)/$", headers: ["Location": "/$1"], status: 308),
+            .init(src: "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$", headers: ["Location": "/$1"], status: 308),
             // Handle filesystem
             .init(handle: "filesystem"),
             // Proxy all other routes
-            .init(src: "^(?:/(.*))$", dest: product.name, check: true)
+            .init(src: "^.*$", dest: product.name, check: true)
         ]
         let config = OutputConfiguration(
             routes: routes,
@@ -415,6 +422,7 @@ extension VercelOutput {
     public struct FunctionConfiguration: Codable {
         public var runtime: String = "provided.al2"
         public var handler: String = "bootstrap"
+        public var architecture: Architecture? = nil
         public var memory: Int? = nil
         public var maxDuration: Int? = nil
         public var regions: [String]? = nil
@@ -427,6 +435,7 @@ extension VercelOutput {
 
     public func writeFunctionConfigurations() throws {
         let config = FunctionConfiguration(
+            architecture: architecture,
             memory: .init(functionMemory),
             maxDuration: .init(functionDuration),
             regions: functionRegions?.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -511,7 +520,7 @@ extension VercelOutput {
             executable: dockerToolPath,
             arguments: [
                 "run",
-                "--platform", "linux/x86_64",
+                "--platform", "linux/\(architecture.rawValue)",
                 "--rm",
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
@@ -529,7 +538,7 @@ extension VercelOutput {
             executable: dockerToolPath,
             arguments: [
                 "run",
-                "--platform", "linux/x86_64",
+                "--platform", "linux/\(architecture.rawValue)",
                 "--rm",
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
