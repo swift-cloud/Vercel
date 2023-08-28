@@ -54,8 +54,6 @@ public struct VercelOutput {
         print("")
 
         var deployArguments = [
-            "-b",
-            "FORCE_BUILD_IN_REGION=lhr1-fargate",
             "deploy",
             "--prebuilt"
         ]
