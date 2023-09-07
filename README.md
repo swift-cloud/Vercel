@@ -71,6 +71,15 @@ struct App: VaporHandler {
 }
 ```
 
+And make sure to update your `Package.swift` with the new package:
+
+```swift
+dependencies: [
+  .product(name: "Vercel", package: "Vercel"),
+  .product(name: "VercelVapor", package: "Vercel")
+]
+```
+
 ### Data Fetching
 
 You can use any popular library to fetch data such as Alamofire or async-http-client but we also provide a convenient `fetch()` method directly in this package:
