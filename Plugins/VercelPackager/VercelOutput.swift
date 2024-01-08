@@ -114,6 +114,12 @@ public struct VercelOutput {
     }
 
     public func proxyServer() async throws {
+        print("")
+        print("-------------------------------------------------------------------------")
+        print("Running dev server: http://localhost:\(port)")
+        print("-------------------------------------------------------------------------")
+        print("")
+
         try Shell.execute(
             executable: context.tool(named: "node").path,
             arguments: [
@@ -122,12 +128,6 @@ public struct VercelOutput {
             ],
             environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string]
         )
-
-        print("")
-        print("-------------------------------------------------------------------------")
-        print("Running dev server: http://localhost:\(port)")
-        print("-------------------------------------------------------------------------")
-        print("")
     }
 }
 
