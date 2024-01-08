@@ -13,8 +13,10 @@ struct VercelPackager: CommandPlugin {
     func performCommand(context: PackagePlugin.PluginContext, arguments: [String]) async throws {
         Shell.prepare()
         let vercelOutput = VercelOutput(packageManager: packageManager, context: context, arguments: arguments)
-        if vercelOutput.isDev {
-            try await dev(vercelOutput)
+        if vercelOutput.isServer {
+            try await vercelOutput.proxyServer()
+        } else if vercelOutput.isDev {
+            try await vercelOutput.dev()
         } else {
             try await build(vercelOutput)
         }
@@ -25,11 +27,6 @@ struct VercelPackager: CommandPlugin {
         try await vercelOutput.build()
         if vercelOutput.isDeploy {
             try await vercelOutput.deploy()
-            return
         }
-    }
-
-    private func dev(_ vercelOutput: VercelOutput) async throws {
-        try await vercelOutput.dev()
     }
 }

@@ -97,14 +97,7 @@ public struct VercelOutput {
         }
 
         Task {
-            try Shell.execute(
-                executable: context.tool(named: "node").path,
-                arguments: [
-                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs"]).string,
-                    port
-                ],
-                environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string]
-            )
+            try await proxyServer()
         }
 
         try await Task.sleep(nanoseconds: 3_000_000_000)
@@ -118,6 +111,17 @@ public struct VercelOutput {
         while true {
             try await Task.sleep(nanoseconds: 1_000_000_000_000)
         }
+    }
+
+    public func proxyServer() async throws {
+        try Shell.execute(
+            executable: context.tool(named: "node").path,
+            arguments: [
+                projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs"]).string,
+                port
+            ],
+            environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string]
+        )
     }
 }
 
@@ -134,6 +138,10 @@ extension VercelOutput {
 
     public var isDev: Bool {
         arguments.contains("dev") || arguments.contains("--dev")
+    }
+
+    public var isServer: Bool {
+        arguments.contains("server") || arguments.contains("--server")
     }
 
     public var isDeploy: Bool {
