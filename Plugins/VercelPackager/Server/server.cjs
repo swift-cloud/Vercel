@@ -41,6 +41,7 @@ function serveStaticFile(req, res) {
 }
 
 const server = http.createServer(async (req, res) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
   try {
     serveStaticFile(req, res)
     return
