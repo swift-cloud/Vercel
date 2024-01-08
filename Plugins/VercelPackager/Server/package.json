@@ -1,0 +1,5 @@
+{
+	"name": "vercel-local-proxy-server",
+	"type": "commonjs",
+	"private": true
+}
