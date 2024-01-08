@@ -122,6 +122,12 @@ public struct VercelOutput {
             ],
             environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string]
         )
+
+        print("")
+        print("-------------------------------------------------------------------------")
+        print("Running dev server: http://localhost:\(port)")
+        print("-------------------------------------------------------------------------")
+        print("")
     }
 }
 
