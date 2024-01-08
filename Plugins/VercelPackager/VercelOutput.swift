@@ -100,7 +100,7 @@ public struct VercelOutput {
             try Shell.execute(
                 executable: context.tool(named: "node").path,
                 arguments: [
-                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.js"]).string,
+                    projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs"]).string,
                     port
                 ],
                 environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string]
