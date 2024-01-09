@@ -86,18 +86,11 @@ public struct VercelOutput {
         )
 
         Task {
-            var env = localEnvironment()
-            env["LOCAL_LAMBDA_SERVER_ENABLED"] = "true"
-
-            try Shell.execute(
-                executable: context.tool(named: "swift").path,
-                arguments: ["run", "--package-path", projectDirectory.string],
-                environment: env
-            )
+            try startSwiftAppServer()
         }
 
         Task {
-            try await proxyServer()
+            try startNodeProxyServer()
         }
 
         try await Task.sleep(nanoseconds: 3_000_000_000)
@@ -124,15 +117,7 @@ public struct VercelOutput {
         print("")
         print("")
 
-        try Shell.execute(
-            executable: context.tool(named: "node").path,
-            arguments: [
-                projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs"]).string,
-                port
-            ],
-            environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string],
-            printCommand: false
-        )
+        try startNodeProxyServer()
     }
 }
 
@@ -484,6 +469,34 @@ extension VercelOutput {
 
     public var vercelToken: String? {
         return ProcessInfo.processInfo.environment["VERCEL_TOKEN"]
+    }
+}
+
+// MARK: - Server
+
+extension VercelOutput {
+
+    public func startSwiftAppServer() throws {
+        var env = localEnvironment()
+        env["LOCAL_LAMBDA_SERVER_ENABLED"] = "true"
+
+        try Shell.execute(
+            executable: context.tool(named: "swift").path,
+            arguments: ["run", "--package-path", projectDirectory.string],
+            environment: env
+        )
+    }
+
+    public func startNodeProxyServer() throws {
+        try Shell.execute(
+            executable: context.tool(named: "node").path,
+            arguments: [
+                projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs"]).string,
+                port
+            ],
+            environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string],
+            printCommand: false
+        )
     }
 }
 
