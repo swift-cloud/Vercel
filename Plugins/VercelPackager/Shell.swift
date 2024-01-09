@@ -37,11 +37,14 @@ public struct Shell {
         executable: Path,
         arguments: [String],
         environment: [String: String] = [:],
-        customWorkingDirectory: Path? = .none
+        customWorkingDirectory: Path? = .none,
+        printCommand: Bool = true
     ) throws -> String {
-        print("")
-        print("\(executable.string) \(arguments.joined(separator: " "))")
-        print("")
+        if printCommand {
+            print("")
+            print("\(executable.string) \(arguments.joined(separator: " "))")
+            print("")
+        }
 
         _ = spawnQueue.sync {
             spawnedProcesses.insert(process)
