@@ -59,6 +59,7 @@ const server = http.createServer(async (req, res) => {
     res.end(Buffer.from(_body.body || '', _body.encoding || 'utf8'))
   } catch (err) {
     console.error(err)
+    console.log('')
     res.writeHead(500, {})
     res.end('Internal server error')
   }

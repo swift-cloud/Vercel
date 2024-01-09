@@ -119,6 +119,10 @@ public struct VercelOutput {
         print("Running dev server: http://localhost:\(port)")
         print("-------------------------------------------------------------------------")
         print("")
+        print("")
+        print("Reminder: In Xcode set the Run environment variable LOCAL_LAMBDA_SERVER_ENABLED=true")
+        print("")
+        print("")
 
         try Shell.execute(
             executable: context.tool(named: "node").path,
