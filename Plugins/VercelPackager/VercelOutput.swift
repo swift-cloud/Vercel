@@ -504,6 +504,14 @@ extension VercelOutput {
 
 extension VercelOutput {
 
+    public var swiftBuildDirectory: Path {
+        projectDirectory.appending(".build")
+    }
+
+    public var swiftBuildReleaseDirectory: Path {
+        swiftBuildDirectory.appending("release")
+    }
+
     public func buildProduct(_ product: Product) async throws -> Path {
         print("")
         print("-------------------------------------------------------------------------")
@@ -544,26 +552,6 @@ extension VercelOutput {
     private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
         let baseImage = "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
-        let buildCommand = "swift build -c release -Xswiftc -Osize -Xlinker -S --product \(product.name) --static-swift-stdlib"
-
-        // get the build output path
-        let buildOutputPathCommand = "\(buildCommand) --show-bin-path"
-        let dockerBuildOutputPath = try Shell.execute(
-            executable: dockerToolPath,
-            arguments: [
-                "run",
-                "--platform", "linux/\(architecture.rawValue)",
-                "--rm",
-                "-v", "\(context.package.directory.string):/workspace",
-                "-w", "/workspace",
-                baseImage,
-                "bash", "-cl", buildOutputPathCommand
-            ]
-        )
-        guard let buildPathOutput = dockerBuildOutputPath.split(separator: "\n").last else {
-            throw BuildError.failedParsingDockerOutput(dockerBuildOutputPath)
-        }
-        let buildOutputPath = Path(buildPathOutput.replacingOccurrences(of: "/workspace", with: context.package.directory.string))
 
         // build the product
         try Shell.execute(
@@ -575,12 +563,12 @@ extension VercelOutput {
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
                 baseImage,
-                "bash", "-cl", buildCommand
+                "bash", "-cl", "swift build -c release --static-swift-stdlib"
             ]
         )
 
         // ensure the final binary built correctly
-        let productPath = buildOutputPath.appending(product.name)
+        let productPath = swiftBuildReleaseDirectory.appending(product.name)
         guard fs.fileExists(atPath: productPath.string) else {
             Diagnostics.error("expected '\(product.name)' binary at \"\(productPath.string)\"")
             throw BuildError.productExecutableNotFound(product.name)
