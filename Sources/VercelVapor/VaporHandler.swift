@@ -1,6 +1,6 @@
 //
 //  VaporHandler.swift
-//  
+//
 //
 //  Created by Andrew Barba on 8/25/23.
 //
@@ -29,13 +29,15 @@ extension VaporHandler {
         // Configure vercel server
         app.servers.use(.vercel)
         // Start the application
-        try app.start()
+        try await app.startup()
         // Cache the app instance
-        Shared.app = app
+        await MainActor.run {
+            Shared.app = app
+        }
     }
 
     public func onRequest(_ req: Vercel.Request) async throws -> Vercel.Response {
-        guard let app = Shared.app else {
+        guard let app = await Shared.app else {
             return .status(.serviceUnavailable).send("Vapor application not configured")
         }
         let vaporRequest = try Vapor.Request.from(request: req, for: app)
@@ -44,8 +46,9 @@ extension VaporHandler {
     }
 }
 
-fileprivate struct Shared {
+private struct Shared {
 
+    @MainActor
     static var app: Application?
 }
 
