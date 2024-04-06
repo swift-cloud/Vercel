@@ -424,7 +424,7 @@ extension VercelOutput {
 extension VercelOutput {
 
     public struct FunctionConfiguration: Codable {
-        public var runtime: String = "provided.al2"
+        public var runtime: String = "provided.al2023"
         public var handler: String = "bootstrap"
         public var architecture: Architecture? = nil
         public var memory: Int? = nil
