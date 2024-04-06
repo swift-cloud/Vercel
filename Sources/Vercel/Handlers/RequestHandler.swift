@@ -17,7 +17,7 @@ public protocol RequestHandler: EventLoopLambdaHandler where Event == InvokeEven
     init()
 }
 
-extension RequestHandler {
+extension RequestHandler where Self: Sendable {
 
     public func handle(_ event: InvokeEvent, context: LambdaContext) -> EventLoopFuture<Response> {
         return context.eventLoop.makeFutureWithTask {
