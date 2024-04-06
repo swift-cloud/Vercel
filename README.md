@@ -154,7 +154,10 @@ Use the following GitHub actions workflow to continuiously deploy your project t
 ```yaml
 name: Vercel
 
-on: push
+on:
+  push:
+    branches:
+      - main
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -164,7 +167,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    container: swift:5.7-amazonlinux2
+    container: swift:5.10-amazonlinux2
 
     steps:
       - uses: actions/checkout@v3
@@ -173,7 +176,8 @@ jobs:
         with:
           path: .build
           key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
-          restore-keys: ${{ runner.os }}-spm-
+          restore-keys: |
+            ${{ runner.os }}-spm-
 
       - uses: actions/setup-node@v3
         with:
