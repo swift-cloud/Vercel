@@ -77,21 +77,27 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
         break
     }
 
-    let (data, response): (Data, HTTPURLResponse) = try await withCheckedThrowingContinuation { continuation in
-        let task = URLSession.shared.dataTask(with: httpRequest) { data, response, error in
-            if let data, let response = response as? HTTPURLResponse {
-                continuation.resume(returning: (data, response))
-            } else {
-                continuation.resume(throwing: error ?? FetchError.invalidResponse)
-            }
-        }
-        task.resume()
+    let (data, response) = try await URLSession.shared.data(for: httpRequest)
+
+    guard let httpResponse = response as? HTTPURLResponse else {
+        throw FetchError.invalidResponse
     }
+
+//    let (data, response): (Data, HTTPURLResponse) = try await withCheckedThrowingContinuation { continuation in
+//        let task = URLSession.shared.dataTask(with: httpRequest) { data, response, error in
+//            if let data, let response = response as? HTTPURLResponse {
+//                continuation.resume(returning: (data, response))
+//            } else {
+//                continuation.resume(throwing: error ?? FetchError.invalidResponse)
+//            }
+//        }
+//        task.resume()
+//    }
 
     return FetchResponse(
         body: data,
-        headers: response.allHeaderFields as! [String: String],
-        status: response.statusCode,
+        headers: httpResponse.allHeaderFields as! [String: String],
+        status: httpResponse.statusCode,
         url: url
     )
 }

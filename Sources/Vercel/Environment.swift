@@ -28,11 +28,11 @@ public struct VercelEnvironment: Sendable {
 
 extension VercelEnvironment {
 
-    public static var edgeConfig = Self["EDGE_CONFIG"]!
+    public static let edgeConfig = Self["EDGE_CONFIG"]!
 
-    public static var vercelEnvironment = Self["VERCEL_ENV", default: "dev"]
+    public static let vercelEnvironment = Self["VERCEL_ENV", default: "dev"]
 
-    public static var vercelHostname = Self["VERCEL_URL", default: "localhost"]
+    public static let vercelHostname = Self["VERCEL_URL", default: "localhost"]
 
-    public static var vercelRegion = Self["VERCEL_REGION", default: "dev1"]
+    public static let vercelRegion = Self["VERCEL_REGION", default: "dev1"]
 }
