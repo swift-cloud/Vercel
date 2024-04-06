@@ -28,16 +28,12 @@ extension VaporHandler {
         try await configure(app: app)
         // Configure vercel server
         app.servers.use(.vercel)
-        // Start the application
-        try await app.startup()
         // Cache the app instance
-        await MainActor.run {
-            Shared.app = app
-        }
+        await Shared.default.setApp(app)
     }
 
     public func onRequest(_ req: Vercel.Request) async throws -> Vercel.Response {
-        guard let app = await Shared.app else {
+        guard let app = await Shared.default.app else {
             return .status(.serviceUnavailable).send("Vapor application not configured")
         }
         let vaporRequest = try Vapor.Request.from(request: req, for: app)
@@ -46,10 +42,15 @@ extension VaporHandler {
     }
 }
 
-private struct Shared {
+private actor Shared {
 
-    @MainActor
-    static var app: Application?
+    static let `default` = Shared()
+
+    private(set) var app: Application?
+
+    func setApp(_ app: Application) {
+        self.app = app
+    }
 }
 
 extension Vapor.Request {
