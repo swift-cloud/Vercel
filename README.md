@@ -136,6 +136,11 @@ swift package --disable-sandbox vercel deploy
 
 ### Deploy Options
 
+> [!IMPORTANT]  
+> Before deploying your project, make sure that the selected **Node version is 18.x** instead of 20.x. 
+> You can find it in your project Settings, in the General tab.
+> Using 20.x will result in a [_Serverless Function contains invalid runtime error_](https://vercel.com/guides/serverless-function-contains-invalid-runtime-error)
+
 ```bash
 swift package --disable-sandbox vercel deploy
 ```
