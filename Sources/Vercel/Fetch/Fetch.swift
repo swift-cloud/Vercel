@@ -77,7 +77,7 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
 
     let httpClient = HTTPClient(eventLoopGroupProvider: .shared(context.eventLoop))
     defer {
-        _ = httpClient.shutdown()
+        try! httpClient.syncShutdown()
     }
 
     let response = try await httpClient.execute(httpRequest, timeout: request.timeout ?? .seconds(60))
