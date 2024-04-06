@@ -25,27 +25,27 @@ extension FetchResponse {
 
 extension FetchResponse {
 
-    public func decode<T>(decoder: JSONDecoder = .init()) async throws -> T where T: Decodable & Sendable {
+    public func decode<T>(decoder: JSONDecoder = .init()) throws -> T where T: Decodable & Sendable {
         return try decoder.decode(T.self, from: body)
     }
 
-    public func decode<T>(_ type: T.Type, decoder: JSONDecoder = .init()) async throws -> T where T: Decodable & Sendable {
+    public func decode<T>(_ type: T.Type, decoder: JSONDecoder = .init()) throws -> T where T: Decodable & Sendable {
         return try decoder.decode(type, from: body)
     }
 
-    public func json() async throws -> Any {
+    public func json() throws -> Any {
         return try JSONSerialization.jsonObject(with: body)
     }
 
-    public func jsonObject() async throws -> [String: Any] {
+    public func jsonObject() throws -> [String: Any] {
         return try JSONSerialization.jsonObject(with: body) as! [String: Any]
     }
 
-    public func jsonArray() async throws -> [Any] {
+    public func jsonArray() throws -> [Any] {
         return try JSONSerialization.jsonObject(with: body) as! [Any]
     }
 
-    public func formValues() async throws -> [String: String] {
+    public func formValues() throws -> [String: String] {
         let query = String(data: body, encoding: .utf8)!
         let components = URLComponents(string: "?\(query)")
         let queryItems = components?.queryItems ?? []
@@ -54,15 +54,15 @@ extension FetchResponse {
         }
     }
 
-    public func text() async throws -> String {
+    public func text() throws -> String {
         return String(data: body, encoding: .utf8)!
     }
 
-    public func data() async throws -> Data {
+    public func data() throws -> Data {
         return body
     }
 
-    public func bytes() async throws -> [UInt8] {
+    public func bytes() throws -> [UInt8] {
         return Array(body)
     }
 }
