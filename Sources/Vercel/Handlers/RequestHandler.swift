@@ -21,10 +21,12 @@ extension RequestHandler {
 
     public func handle(_ event: InvokeEvent, context: LambdaContext) -> EventLoopFuture<Response> {
         return context.eventLoop.makeFutureWithTask {
-            let data = Data(event.body.utf8)
-            let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: data)
-            let req = Request(payload, in: context)
-            return try await onRequest(req)
+            return try await RequestHandlerState.$context.withValue(context) {
+                let data = Data(event.body.utf8)
+                let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: data)
+                let req = Request(payload, in: context)
+                return try await onRequest(req)
+            }
         }
     }
 
@@ -36,4 +38,10 @@ extension RequestHandler {
             return Self()
         }
     }
+}
+
+public enum RequestHandlerState {
+    
+    @TaskLocal
+    public static var context: LambdaContext?
 }

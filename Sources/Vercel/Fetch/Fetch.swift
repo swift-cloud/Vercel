@@ -6,14 +6,13 @@
 //
 
 import Foundation
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
+import AsyncHTTPClient
 
 public enum FetchError: Error, Sendable {
     case invalidResponse
     case invalidURL
     case timeout
+    case invalidLambdaContext
 }
 
 public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
@@ -42,62 +41,52 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
     }
 
     // Set request resources
-    var httpRequest = URLRequest(url: url)
+    var httpRequest = HTTPClientRequest(url: url.absoluteString)
 
     // Set request method
-    httpRequest.httpMethod = request.method.rawValue
-
-    // Set the timeout interval
-    if let timeoutInterval = request.timeoutInterval {
-        httpRequest.timeoutInterval = timeoutInterval
-    }
+    httpRequest.method = .init(rawValue: request.method.rawValue)
 
     // Set default content type based on body
     if let contentType = request.body?.defaultContentType {
         let name = HTTPHeaderKey.contentType.rawValue
-        httpRequest.setValue(request.headers[name] ?? contentType, forHTTPHeaderField: name)
+        httpRequest.headers.add(name: name, value: request.headers[name] ?? contentType)
     }
 
     // Set headers
     for (key, value) in request.headers {
-        httpRequest.setValue(value, forHTTPHeaderField: key)
+        httpRequest.headers.add(name: key, value: value)
     }
 
     // Write bytes to body
     switch request.body {
     case .bytes(let bytes):
-        httpRequest.httpBody = Data(bytes)
+        httpRequest.body = .bytes(bytes)
     case .data(let data):
-        httpRequest.httpBody = data
+        httpRequest.body = .bytes(data)
     case .text(let text):
-        httpRequest.httpBody = Data(text.utf8)
+        httpRequest.body = .bytes(Data(text.utf8))
     case .json(let json):
-        httpRequest.httpBody = json
+        httpRequest.body = .bytes(json)
     case .none:
         break
     }
 
-    let (data, response) = try await URLSession.shared.data(for: httpRequest)
-
-    guard let httpResponse = response as? HTTPURLResponse else {
-        throw FetchError.invalidResponse
+    guard let context = RequestHandlerState.context else {
+        throw FetchError.invalidLambdaContext
     }
 
-//    let (data, response): (Data, HTTPURLResponse) = try await withCheckedThrowingContinuation { continuation in
-//        let task = URLSession.shared.dataTask(with: httpRequest) { data, response, error in
-//            if let data, let response = response as? HTTPURLResponse {
-//                continuation.resume(returning: (data, response))
-//            } else {
-//                continuation.resume(throwing: error ?? FetchError.invalidResponse)
-//            }
-//        }
-//        task.resume()
-//    }
+    let httpClient = HTTPClient(eventLoopGroupProvider: .shared(context.eventLoop))
+
+    let response = try await httpClient.execute(httpRequest, timeout: request.timeout ?? .seconds(60))
+
+    var buffer = try await response.body.collect(upTo: request.maxBodySize ?? .max)
+
+    let data = buffer.readData(length: buffer.readableBytes) ?? .init()
 
     return FetchResponse(
         body: data,
-        headers: httpResponse.allHeaderFields as! [String: String],
-        status: httpResponse.statusCode,
+        headers: response.headers.reduce(into: [:]) { $0[$1.name] = $1.value },
+        status: .init(response.status.code),
         url: url
     )
 }
