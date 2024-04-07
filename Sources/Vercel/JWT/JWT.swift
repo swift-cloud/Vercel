@@ -54,7 +54,7 @@ public struct JWT: Sendable {
     }
 
     public init(
-        claims: [String: Any],
+        claims: [String: Sendable],
         secret: String,
         algorithm: Algorithm = .hs256,
         issuedAt: Date = .init(),
@@ -63,12 +63,12 @@ public struct JWT: Sendable {
         subject: String? = nil,
         identifier: String? = nil
     ) throws {
-        let header: [String: Any] = [
+        let header: [String: Sendable] = [
             "alg": algorithm.rawValue,
             "typ": "JWT"
         ]
 
-        var properties: [String: Any] = [
+        var properties: [String: Sendable] = [
             "iat": floor(issuedAt.timeIntervalSince1970)
         ]
 
@@ -191,9 +191,9 @@ extension JWT {
     }
 }
 
-private func decodeJWTPart(_ value: String) throws -> [String: Any] {
+private func decodeJWTPart(_ value: String) throws -> [String: Sendable] {
     let bodyData = try base64UrlDecode(value)
-    guard let json = try JSONSerialization.jsonObject(with: bodyData, options: []) as? [String: Any] else {
+    guard let json = try JSONSerialization.jsonObject(with: bodyData, options: []) as? [String: Sendable] else {
         throw JWTError.invalidJSON
     }
     return json

@@ -5,7 +5,7 @@
 //  Created by Andrew Barba on 1/22/23.
 //
 
-public final class Router {
+public actor Router {
 
     public typealias Handler = (Request, Response) async throws -> Response
 

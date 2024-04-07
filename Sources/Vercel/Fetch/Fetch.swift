@@ -6,14 +6,13 @@
 //
 
 import Foundation
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
+import AsyncHTTPClient
 
 public enum FetchError: Error, Sendable {
     case invalidResponse
     case invalidURL
     case timeout
+    case invalidLambdaContext
 }
 
 public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
@@ -42,56 +41,44 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
     }
 
     // Set request resources
-    var httpRequest = URLRequest(url: url)
+    var httpRequest = HTTPClientRequest(url: url.absoluteString)
 
     // Set request method
-    httpRequest.httpMethod = request.method.rawValue
-
-    // Set the timeout interval
-    if let timeoutInterval = request.timeoutInterval {
-        httpRequest.timeoutInterval = timeoutInterval
-    }
+    httpRequest.method = .init(rawValue: request.method.rawValue)
 
     // Set default content type based on body
     if let contentType = request.body?.defaultContentType {
         let name = HTTPHeaderKey.contentType.rawValue
-        httpRequest.setValue(request.headers[name] ?? contentType, forHTTPHeaderField: name)
+        httpRequest.headers.add(name: name, value: request.headers[name] ?? contentType)
     }
 
     // Set headers
     for (key, value) in request.headers {
-        httpRequest.setValue(value, forHTTPHeaderField: key)
+        httpRequest.headers.add(name: key, value: value)
     }
 
     // Write bytes to body
     switch request.body {
     case .bytes(let bytes):
-        httpRequest.httpBody = Data(bytes)
+        httpRequest.body = .bytes(bytes)
     case .data(let data):
-        httpRequest.httpBody = data
+        httpRequest.body = .bytes(data)
     case .text(let text):
-        httpRequest.httpBody = Data(text.utf8)
+        httpRequest.body = .bytes(text.utf8, length: .known(text.utf8.count))
     case .json(let json):
-        httpRequest.httpBody = json
+        httpRequest.body = .bytes(json)
     case .none:
         break
     }
 
-    let (data, response): (Data, HTTPURLResponse) = try await withCheckedThrowingContinuation { continuation in
-        let task = URLSession.shared.dataTask(with: httpRequest) { data, response, error in
-            if let data, let response = response as? HTTPURLResponse {
-                continuation.resume(returning: (data, response))
-            } else {
-                continuation.resume(throwing: error ?? FetchError.invalidResponse)
-            }
-        }
-        task.resume()
-    }
+    let httpClient = request.httpClient ?? HTTPClient.vercelClient
+
+    let response = try await httpClient.execute(httpRequest, timeout: request.timeout ?? .seconds(60))
 
     return FetchResponse(
-        body: data,
-        headers: response.allHeaderFields as! [String: String],
-        status: response.statusCode,
+        body: response.body,
+        headers: response.headers.reduce(into: [:]) { $0[$1.name] = $1.value },
+        status: .init(response.status.code),
         url: url
     )
 }
@@ -107,4 +94,40 @@ public func fetch(_ urlPath: String, _ options: FetchRequest.Options = .options(
     }
     let request = FetchRequest(url, options)
     return try await fetch(request)
+}
+
+extension HTTPClient {
+
+    fileprivate static let vercelClient = HTTPClient(
+        eventLoopGroup: HTTPClient.defaultEventLoopGroup,
+        configuration: .vercelConfiguration
+    )
+}
+
+extension HTTPClient.Configuration {
+    /// The ``HTTPClient/Configuration`` for ``HTTPClient/shared`` which tries to mimic the platform's default or prevalent browser as closely as possible.
+    ///
+    /// Don't rely on specific values of this configuration as they're subject to change. You can rely on them being somewhat sensible though.
+    ///
+    /// - note: At present, this configuration is nowhere close to a real browser configuration but in case of disagreements we will choose values that match
+    ///   the default browser as closely as possible.
+    ///
+    /// Platform's default/prevalent browsers that we're trying to match (these might change over time):
+    ///  - macOS: Safari
+    ///  - iOS: Safari
+    ///  - Android: Google Chrome
+    ///  - Linux (non-Android): Google Chrome
+    fileprivate static var vercelConfiguration: HTTPClient.Configuration {
+        // To start with, let's go with these values. Obtained from Firefox's config.
+        return HTTPClient.Configuration(
+            certificateVerification: .fullVerification,
+            redirectConfiguration: .follow(max: 20, allowCycles: false),
+            timeout: Timeout(connect: .seconds(90), read: .seconds(90)),
+            connectionPool: .seconds(600),
+            proxy: nil,
+            ignoreUncleanSSLShutdown: false,
+            decompression: .enabled(limit: .ratio(10)),
+            backgroundActivityLogger: nil
+        )
+    }
 }

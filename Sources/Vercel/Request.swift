@@ -89,3 +89,9 @@ extension Request {
         return headers[key.rawValue]?.value
     }
 }
+
+extension Request {
+
+    @TaskLocal
+    public static var current: Request?
+}

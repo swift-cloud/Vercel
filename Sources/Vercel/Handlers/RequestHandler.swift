@@ -8,7 +8,7 @@
 import AWSLambdaRuntime
 import NIOCore
 
-public protocol RequestHandler: EventLoopLambdaHandler where Event == InvokeEvent, Output == Response {
+public protocol RequestHandler: Sendable & EventLoopLambdaHandler where Event == InvokeEvent, Output == Response {
 
     func onRequest(_ req: Request) async throws -> Response
 
@@ -24,7 +24,9 @@ extension RequestHandler {
             let data = Data(event.body.utf8)
             let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: data)
             let req = Request(payload, in: context)
-            return try await onRequest(req)
+            return try await Request.$current.withValue(req) {
+                return try await onRequest(req)
+            }
         }
     }
 
