@@ -8,7 +8,7 @@
 import AWSLambdaRuntime
 import NIOCore
 
-public protocol RequestHandler: EventLoopLambdaHandler where Event == InvokeEvent, Output == Response {
+public protocol RequestHandler: Sendable & EventLoopLambdaHandler where Event == InvokeEvent, Output == Response {
 
     func onRequest(_ req: Request) async throws -> Response
 
@@ -17,14 +17,14 @@ public protocol RequestHandler: EventLoopLambdaHandler where Event == InvokeEven
     init()
 }
 
-extension RequestHandler where Self: Sendable {
+extension RequestHandler {
 
     public func handle(_ event: InvokeEvent, context: LambdaContext) -> EventLoopFuture<Response> {
         return context.eventLoop.makeFutureWithTask {
-            return try await RequestHandlerState.$context.withValue(context) {
-                let data = Data(event.body.utf8)
-                let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: data)
-                let req = Request(payload, in: context)
+            let data = Data(event.body.utf8)
+            let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: data)
+            let req = Request(payload, in: context)
+            return try await Request.$current.withValue(req) {
                 return try await onRequest(req)
             }
         }
@@ -38,10 +38,4 @@ extension RequestHandler where Self: Sendable {
             return Self()
         }
     }
-}
-
-public enum RequestHandlerState {
-    
-    @TaskLocal
-    public static var context: LambdaContext?
 }

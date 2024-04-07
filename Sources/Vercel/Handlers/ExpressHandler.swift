@@ -10,8 +10,8 @@ import AWSLambdaRuntime
 public protocol ExpressHandler: RequestHandler {
 
     static var basePath: String { get }
-
-    static func configure(router: Router) async throws
+    
+    static func configure(router: isolated Router) async throws
 }
 
 extension ExpressHandler {
@@ -26,18 +26,24 @@ extension ExpressHandler {
         // Configure router in user code
         try await configure(router: router)
         // Cache the app instance
-        Shared.router = router
+        await Shared.default.setRouter(router)
     }
 
     public func onRequest(_ req: Request) async throws -> Response {
-        guard let router = Shared.router else {
+        guard let router = await Shared.default.router else {
             return .status(.serviceUnavailable).send("Express router not configured")
         }
         return try await router.run(req)
     }
 }
 
-fileprivate struct Shared {
+fileprivate actor Shared {
 
-    static var router: Router?
+    static let `default` = Shared()
+
+    var router: Router?
+
+    func setRouter(_ router: Router) {
+        self.router = router
+    }
 }
