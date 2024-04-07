@@ -64,7 +64,7 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
     case .data(let data):
         httpRequest.body = .bytes(data)
     case .text(let text):
-        httpRequest.body = .bytes(Data(text.utf8))
+        httpRequest.body = .bytes(text.utf8, length: .known(text.utf8.count))
     case .json(let json):
         httpRequest.body = .bytes(json)
     case .none:
