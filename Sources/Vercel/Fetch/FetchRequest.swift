@@ -5,6 +5,7 @@
 //  Created by Andrew Barba on 1/22/23.
 //
 
+import AsyncHTTPClient
 import NIOCore
 
 public struct FetchRequest: Sendable {
@@ -21,7 +22,7 @@ public struct FetchRequest: Sendable {
 
     public var timeout: TimeAmount? = nil
 
-    public var maxBodySize: Int? = nil
+    public var httpClient: HTTPClient? = nil
 
     public init(_ url: URL, _ options: Options = .options()) {
         self.url = url
@@ -30,7 +31,7 @@ public struct FetchRequest: Sendable {
         self.searchParams = options.searchParams
         self.body = options.body
         self.timeout = options.timeout
-        self.maxBodySize = options.maxBodySize
+        self.httpClient = options.httpClient
     }
 }
 
@@ -48,7 +49,7 @@ extension FetchRequest {
 
         public var timeout: TimeAmount? = nil
 
-        public var maxBodySize: Int? = nil
+        public var httpClient: HTTPClient? = nil
 
         public static func options(
             method: HTTPMethod = .GET,
@@ -56,7 +57,7 @@ extension FetchRequest {
             headers: [String: String] = [:],
             searchParams: [String: String] = [:],
             timeout: TimeAmount? = nil,
-            maxBodySize: Int? = nil
+            httpClient: HTTPClient? = nil
         ) -> Options {
             return Options(
                 method: method,
@@ -64,7 +65,7 @@ extension FetchRequest {
                 headers: headers,
                 searchParams: searchParams,
                 timeout: timeout,
-                maxBodySize: maxBodySize
+                httpClient: httpClient
             )
         }
     }

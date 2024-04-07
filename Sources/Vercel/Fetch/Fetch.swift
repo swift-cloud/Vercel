@@ -71,23 +71,12 @@ public func fetch(_ request: FetchRequest) async throws -> FetchResponse {
         break
     }
 
-    guard let context = RequestHandlerState.context else {
-        throw FetchError.invalidLambdaContext
-    }
-
-    let httpClient = HTTPClient(eventLoopGroupProvider: .shared(context.eventLoop))
-    defer {
-        try! httpClient.syncShutdown()
-    }
+    let httpClient = request.httpClient ?? HTTPClient.vercelClient
 
     let response = try await httpClient.execute(httpRequest, timeout: request.timeout ?? .seconds(60))
 
-    var buffer = try await response.body.collect(upTo: request.maxBodySize ?? .max)
-
-    let data = buffer.readData(length: buffer.readableBytes) ?? .init()
-
     return FetchResponse(
-        body: data,
+        body: response.body,
         headers: response.headers.reduce(into: [:]) { $0[$1.name] = $1.value },
         status: .init(response.status.code),
         url: url
@@ -105,4 +94,40 @@ public func fetch(_ urlPath: String, _ options: FetchRequest.Options = .options(
     }
     let request = FetchRequest(url, options)
     return try await fetch(request)
+}
+
+extension HTTPClient {
+
+    fileprivate static let vercelClient = HTTPClient(
+        eventLoopGroup: HTTPClient.defaultEventLoopGroup,
+        configuration: .vercelConfiguration
+    )
+}
+
+extension HTTPClient.Configuration {
+    /// The ``HTTPClient/Configuration`` for ``HTTPClient/shared`` which tries to mimic the platform's default or prevalent browser as closely as possible.
+    ///
+    /// Don't rely on specific values of this configuration as they're subject to change. You can rely on them being somewhat sensible though.
+    ///
+    /// - note: At present, this configuration is nowhere close to a real browser configuration but in case of disagreements we will choose values that match
+    ///   the default browser as closely as possible.
+    ///
+    /// Platform's default/prevalent browsers that we're trying to match (these might change over time):
+    ///  - macOS: Safari
+    ///  - iOS: Safari
+    ///  - Android: Google Chrome
+    ///  - Linux (non-Android): Google Chrome
+    fileprivate static var vercelConfiguration: HTTPClient.Configuration {
+        // To start with, let's go with these values. Obtained from Firefox's config.
+        return HTTPClient.Configuration(
+            certificateVerification: .fullVerification,
+            redirectConfiguration: .follow(max: 20, allowCycles: false),
+            timeout: Timeout(connect: .seconds(90), read: .seconds(90)),
+            connectionPool: .seconds(600),
+            proxy: nil,
+            ignoreUncleanSSLShutdown: false,
+            decompression: .enabled(limit: .ratio(10)),
+            backgroundActivityLogger: nil
+        )
+    }
 }

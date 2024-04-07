@@ -5,9 +5,13 @@
 //  Created by Andrew Barba on 1/22/23.
 //
 
+import AsyncHTTPClient
+import NIOCore
+import NIOFoundationCompat
+
 public struct FetchResponse: Sendable {
 
-    public let body: Data
+    public let body: HTTPClientResponse.Body
 
     public let headers: [String: String]
 
@@ -26,27 +30,32 @@ extension FetchResponse {
 extension FetchResponse {
 
     public func decode<T>(decoder: JSONDecoder = .init()) async throws -> T where T: Decodable & Sendable {
-        return try decoder.decode(T.self, from: body)
+        let bytes = try await self.bytes()
+        return try decoder.decode(T.self, from: bytes)
     }
 
     public func decode<T>(_ type: T.Type, decoder: JSONDecoder = .init()) async throws -> T where T: Decodable & Sendable {
-        return try decoder.decode(type, from: body)
+        let bytes = try await self.bytes()
+        return try decoder.decode(type, from: bytes)
     }
 
     public func json() async throws -> Any {
-        return try JSONSerialization.jsonObject(with: body)
+        let bytes = try await self.bytes()
+        return try JSONSerialization.jsonObject(with: bytes)
     }
 
     public func jsonObject() async throws -> [String: Any] {
-        return try JSONSerialization.jsonObject(with: body) as! [String: Any]
+        let bytes = try await self.bytes()
+        return try JSONSerialization.jsonObject(with: bytes) as! [String: Any]
     }
 
     public func jsonArray() async throws -> [Any] {
-        return try JSONSerialization.jsonObject(with: body) as! [Any]
+        let bytes = try await self.bytes()
+        return try JSONSerialization.jsonObject(with: bytes) as! [Any]
     }
 
     public func formValues() async throws -> [String: String] {
-        let query = String(data: body, encoding: .utf8)!
+        let query = try await self.text()
         let components = URLComponents(string: "?\(query)")
         let queryItems = components?.queryItems ?? []
         return queryItems.reduce(into: [:]) { values, item in
@@ -55,14 +64,16 @@ extension FetchResponse {
     }
 
     public func text() async throws -> String {
-        return String(data: body, encoding: .utf8)!
+        var bytes = try await self.bytes()
+        return bytes.readString(length: bytes.readableBytes) ?? ""
     }
 
     public func data() async throws -> Data {
-        return body
+        var bytes = try await self.bytes()
+        return bytes.readData(length: bytes.readableBytes) ?? .init()
     }
 
-    public func bytes() async throws -> [UInt8] {
-        return Array(body)
+    public func bytes(upTo maxBytes: Int = .max) async throws -> ByteBuffer {
+        return try await body.collect(upTo: maxBytes)
     }
 }
