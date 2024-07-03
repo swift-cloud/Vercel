@@ -563,7 +563,7 @@ extension VercelOutput {
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
                 baseImage,
-                "bash", "-cl", "swift build -c release --static-swift-stdlib"
+                "bash", "-cl", "swift build -c release -Xswiftc -Osize --static-swift-stdlib"
             ]
         )
 
