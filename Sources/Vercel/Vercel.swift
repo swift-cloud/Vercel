@@ -6,3 +6,5 @@
 //
 
 @_exported import Foundation
+@_exported import HTTPTypes
+@_exported import HTTPTypesFoundation
