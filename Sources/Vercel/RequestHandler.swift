@@ -24,23 +24,28 @@ extension RequestHandler {
         return context.eventLoop.makeFutureWithTask {
             let data = Data(event.body.utf8)
             let payload = try JSONDecoder().decode(InvokeEvent.Payload.self, from: data)
-            let hostField = HTTPField.Name("host")!
+            let headerFields: HTTPFields = payload.headers.reduce(into: .init()) {
+                $0.append(.init(name: .init($1.key)!, value: $1.value))
+            }
             let request = IncomingRequest(
                 request: .init(
                     method: payload.method,
                     scheme: "https",
-                    authority: payload.headers[hostField],
+                    authority: payload.headers["host"],
                     path: payload.path,
-                    headerFields: payload.headers
+                    headerFields: headerFields
                 ),
                 body: payload.body,
                 context: context
             )
             return try await IncomingRequest.$current.withValue(request) {
                 let response = try await onRequest(request)
+                let headers: [String: String] = response.response.headerFields.reduce(into: [:]) {
+                    $0[$1.name.canonicalName] = $1.value
+                }
                 return .init(
                     statusCode: response.response.status.code,
-                    headers: response.response.headerFields,
+                    headers: headers,
                     body: response.body,
                     encoding: response.encoding
                 )

@@ -12,7 +12,7 @@ import HTTPTypesFoundation
 public struct InvokeEvent: Codable, Sendable {
     public struct Payload: Codable, Sendable {
         public let method: HTTPRequest.Method
-        public let headers: HTTPFields
+        public let headers: [String: String]
         public let path: String
         public let body: String?
         public let encoding: String?
@@ -27,7 +27,7 @@ public struct InvokeResponse: Codable, Sendable {
     }
 
     public var statusCode: Int
-    public var headers: HTTPFields?
+    public var headers: [String: String]?
     public var body: String?
     public var encoding: Encoding?
     public var cookies: [String]?
