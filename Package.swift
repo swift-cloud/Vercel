@@ -1,9 +1,9 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.10
 
 import PackageDescription
 
 let package = Package(
-    name: "Vercel",
+    name: "swift-vercel",
     platforms: [
         .macOS(.v12)
     ],
@@ -13,10 +13,8 @@ let package = Package(
         .plugin(name: "VercelPackager", targets: ["VercelPackager"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-crypto", from: "3.0.0"),
-        .package(
-            url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.2"),
-        .package(url: "https://github.com/swift-server/async-http-client", from: "1.20.1"),
+        .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime", from: "1.0.0-alpha.2"),
+        .package(url: "https://github.com/apple/swift-http-types.git", from: "1.0.0"),
         .package(url: "https://github.com/vapor/vapor", from: "4.0.0"),
     ],
     targets: [
@@ -24,8 +22,8 @@ let package = Package(
             name: "Vercel",
             dependencies: [
                 .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
-                .product(name: "AsyncHTTPClient", package: "async-http-client"),
-                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "HTTPTypes", package: "swift-http-types"),
+                .product(name: "HTTPTypesFoundation", package: "swift-http-types"),
             ],
             swiftSettings: [
                 .enableExperimentalFeature("StrictConcurrency")

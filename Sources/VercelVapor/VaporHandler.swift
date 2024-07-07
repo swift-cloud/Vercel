@@ -6,6 +6,7 @@
 //
 
 import AWSLambdaRuntime
+import HTTPTypes
 import Vapor
 import Vercel
 
@@ -23,7 +24,7 @@ extension VaporHandler {
     }
 
     public static func setup(context: LambdaInitializationContext) async throws {
-        let app = Application(environment, .shared(context.eventLoop))
+        let app = try await Application.make(environment, .shared(context.eventLoop))
         // Request vapor application from user code
         try await configure(app: app)
         // Configure vercel server
@@ -32,7 +33,7 @@ extension VaporHandler {
         await Shared.default.setApp(app)
     }
 
-    public func onRequest(_ req: Vercel.Request) async throws -> Vercel.Response {
+    public func onRequest(_ req: IncomingRequest) async throws -> OutgoingResponse {
         guard let app = await Shared.default.app else {
             return .status(.serviceUnavailable).send("Vapor application not configured")
         }
@@ -55,49 +56,44 @@ private actor Shared {
 
 extension Vapor.Request {
 
-    static func from(request: Vercel.Request, for app: Application) throws -> Self {
-        let buffer = request.rawBody.map { data in
+    static func from(request: IncomingRequest, for app: Application) throws -> Self {
+        let buffer = request.body.map { data in
             var _buffer = request.context.allocator.buffer(capacity: data.count)
-            _buffer.writeBytes(data)
+            _buffer.writeBytes(data.utf8)
             return _buffer
         }
 
-        let nioHeaders = request.headers.reduce(into: NIOHTTP1.HTTPHeaders()) {
-            $0.add(name: $1.key, value: $1.value.value)
-        }
-
-        var url: String = request.path
-
-        if request.searchParams.count > 0, let search = request.search {
-            url += "?\(search)"
+        let nioHeaders = request.headerFields.reduce(into: NIOHTTP1.HTTPHeaders()) {
+            $0.add(name: $1.name.canonicalName, value: $1.value)
         }
 
         return try .init(
             application: app,
             method: .init(rawValue: request.method.rawValue),
-            url: .init(path: url),
+            url: .init(string: request.rawPath),
             version: HTTPVersion(major: 1, minor: 1),
             headers: nioHeaders,
             collectedBody: buffer,
-            remoteAddress: .init(ipAddress: request.clientIPAddress, port: 443),
+            remoteAddress: .init(ipAddress: request.vercelClientIPAddress, port: 443),
             logger: app.logger,
             on: app.eventLoopGroup.next()
         )
     }
 }
 
-extension Vercel.Response {
+extension OutgoingResponse {
 
     static func from(response: Vapor.Response, on eventLoop: EventLoop) async throws -> Self {
         // Create status code
-        let statusCode = Vercel.HTTPResponseStatus(
-            code: response.status.code,
+        let status = HTTPResponse.Status(
+            code: .init(response.status.code),
             reasonPhrase: response.status.reasonPhrase
         )
 
         // Create the headers
-        let headers: [String: HTTPHeaderValue] = response.headers.reduce(into: [:]) {
-            $0[$1.name] = .init($1.value)
+        let headerFields: HTTPFields = response.headers.reduce(into: [:]) {
+            let field = HTTPField.Name($1.name)!
+            $0[field] = .init($1.value)
         }
 
         // Stream the body to a future
@@ -105,9 +101,9 @@ extension Vercel.Response {
             var buffer = $0
             let byteLength = buffer?.readableBytes ?? 0
             let bytes = buffer?.readBytes(length: byteLength)
-            return Vercel.Response(
-                statusCode: statusCode,
-                headers: headers,
+            return OutgoingResponse(
+                status: status,
+                headerFields: headerFields,
                 body: bytes?.base64String(),
                 encoding: bytes.map { _ in .base64 }
             )
