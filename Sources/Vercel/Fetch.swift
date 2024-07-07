@@ -19,11 +19,6 @@ public enum FetchError: Error, Sendable {
     case invalidLambdaContext
 }
 
-public struct FetchResponse: Sendable {
-    let response: HTTPResponse
-    let data: Data?
-}
-
 public func fetch(_ httpRequest: HTTPRequest) async throws -> FetchResponse {
     return try await withCheckedThrowingContinuation { continuation in
         guard let urlRequest = URLRequest(httpRequest: httpRequest) else {
@@ -39,7 +34,7 @@ public func fetch(_ httpRequest: HTTPRequest) async throws -> FetchResponse {
                 continuation.resume(throwing: FetchError.invalidResponse)
                 return
             }
-            continuation.resume(returning: .init(response: response, data: data))
+            continuation.resume(returning: .init(response: response, body: data))
         }
         task.resume()
     }

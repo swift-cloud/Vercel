@@ -31,7 +31,7 @@ import Vercel
 @main
 struct App: RequestHandler {
 
-    func onRequest(_ req: Request) async throws -> Response {
+    func onRequest(_ req: IncomingRequest) async throws -> OutgoingResponse {
         let greeting = EdgeConfig.default.get("greeting").string!
         return .status(.ok).send("Hello, \(greeting)")
     }
