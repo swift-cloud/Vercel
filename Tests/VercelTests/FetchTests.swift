@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import Vercel
 
 final class FetchTests: XCTestCase {

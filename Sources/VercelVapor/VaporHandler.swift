@@ -37,7 +37,7 @@ extension VaporHandler {
         guard let app = await Shared.default.app else {
             return .status(.serviceUnavailable).send("Vapor application not configured")
         }
-        let vaporRequest = try Vapor.Request.from(request: req, for: app)
+        let vaporRequest = try await Vapor.Request.from(request: req, for: app)
         let vaporResponse = try await app.responder.respond(to: vaporRequest).get()
         return try await .from(response: vaporResponse, on: app.eventLoopGroup.next())
     }
@@ -56,10 +56,12 @@ private actor Shared {
 
 extension Vapor.Request {
 
-    static func from(request: IncomingRequest, for app: Application) throws -> Self {
-        let buffer = request.body.map { data in
+    static func from(request: IncomingRequest, for app: Application) async throws -> Self {
+        let bytes = try await request.body?.bytes()
+
+        let buffer = bytes.map { data in
             var _buffer = request.context.allocator.buffer(capacity: data.count)
-            _buffer.writeBytes(data.utf8)
+            _buffer.writeBytes(data)
             return _buffer
         }
 
@@ -70,7 +72,7 @@ extension Vapor.Request {
         return try .init(
             application: app,
             method: .init(rawValue: request.method.rawValue),
-            url: .init(string: request.rawPath),
+            url: .init(string: request.url.absoluteString),
             version: HTTPVersion(major: 1, minor: 1),
             headers: nioHeaders,
             collectedBody: buffer,
