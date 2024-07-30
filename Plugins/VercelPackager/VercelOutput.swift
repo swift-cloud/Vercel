@@ -559,7 +559,7 @@ extension VercelOutput {
     private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
         let baseImage =
-            "swiftlang/swift:nightly-\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
+            "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
 
         // build the product
         try Shell.execute(
