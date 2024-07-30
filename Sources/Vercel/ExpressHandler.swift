@@ -29,7 +29,7 @@ extension ExpressHandler {
         await Shared.default.setRouter(router)
     }
 
-    public func onRequest(_ req: Request) async throws -> Response {
+    public func onRequest(_ req: IncomingRequest) async throws -> OutgoingResponse {
         guard let router = await Shared.default.router else {
             return .status(.serviceUnavailable).send("Express router not configured")
         }

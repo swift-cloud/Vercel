@@ -5,102 +5,99 @@
 //  Created by Andrew Barba on 1/21/23.
 //
 
-public struct Response: Codable, Sendable {
-    public enum Encoding: String, Codable, Sendable {
-        case base64
-    }
+import HTTPTypes
 
-    public var statusCode: HTTPResponseStatus
-    public var headers: HTTPHeaders?
+public struct OutgoingResponse: Sendable {
+    public var response: HTTPResponse
+    
     public var body: String?
-    public var encoding: Encoding?
-    public var cookies: [String]?
+
+    public var encoding: InvokeResponse.Encoding?
 
     public var didSend: Bool {
         body != nil
     }
 
     public init(
-        statusCode: HTTPResponseStatus = .ok,
-        headers: HTTPHeaders? = nil,
+        status: HTTPResponse.Status = .ok,
+        headerFields: HTTPFields = [:],
         body: String? = nil,
-        encoding: Encoding? = nil,
-        cookies: [String]? = nil
+        encoding: InvokeResponse.Encoding? = nil
     ) {
-        self.statusCode = statusCode
-        self.headers = headers
+        self.response = .init(status: status, headerFields: headerFields)
         self.body = body
         self.encoding = encoding
-        self.cookies = cookies
     }
 
     public func with(
-        statusCode: HTTPResponseStatus? = nil,
-        headers: HTTPHeaders? = nil,
+        status: HTTPResponse.Status? = nil,
+        headerFields: HTTPFields? = nil,
         body: String? = nil,
-        encoding: Encoding? = nil,
-        cookies: [String]? = nil
+        encoding: InvokeResponse.Encoding? = nil
     ) -> Self {
         return .init(
-            statusCode: statusCode ?? self.statusCode,
-            headers: headers ?? self.headers,
+            status: status ?? self.response.status,
+            headerFields: headerFields ?? self.response.headerFields,
             body: body ?? self.body,
-            encoding: encoding ?? self.encoding,
-            cookies: cookies ?? self.cookies
+            encoding: encoding ?? self.encoding
         )
     }
 }
 
 // MARK: - Static Init
 
-extension Response {
+extension OutgoingResponse {
 
-    public static func status(_ statusCode: HTTPResponseStatus) -> Self {
-        return .init(statusCode: statusCode)
+    public static func status(_ statusCode: HTTPResponse.Status) -> Self {
+        return .init(status: statusCode)
     }
 
-    public static func status(_ statusCode: UInt) -> Self {
-        return .init(statusCode: .init(code: statusCode))
+    public static func status(_ status: Int) -> Self {
+        return .init(status: .init(code: status))
     }
 }
 
 // MARK: - Status
 
-extension Response {
+extension OutgoingResponse {
 
-    public func status(_ statusCode: HTTPResponseStatus) -> Self {
-        return with(statusCode: statusCode)
+    public func status(_ status: HTTPResponse.Status) -> Self {
+        return with(status: status)
     }
 
-    public func status(_ statusCode: UInt) -> Self {
-        return with(statusCode: .init(code: statusCode))
+    public func status(_ status: Int) -> Self {
+        return with(status: .init(code: status))
     }
 }
 
 // MARK: - Headers
 
-extension Response {
+extension OutgoingResponse {
 
     public func header(_ key: String) -> String? {
-        return headers?[key]?.value
+        guard let field = HTTPField.Name(key) else {
+            return nil
+        }
+        return response.headerFields[field]
     }
 
-    public func header(_ key: HTTPHeaderKey) -> String? {
-        return header(key.rawValue)
+    public func header(_ field: HTTPField.Name) -> String? {
+        return response.headerFields[field]
     }
 
     public func header(_ key: String, _ value: String?) -> Self {
-        var headers = self.headers ?? [:]
-        if let value {
-            headers[key] = .init(value)
-        } else {
-            headers[key] = nil
+        guard let field = HTTPField.Name(key) else {
+            return self
         }
-        return with(headers: headers)
+        var headerFields = response.headerFields
+        headerFields[field] = value
+        return with(headerFields: headerFields)
     }
 
-    public func header(_ key: HTTPHeaderKey, _ value: String?) -> Self {
-        return header(key.rawValue, value)
+    public func header(_ field: HTTPField.Name, _ value: String?) -> Self {
+        var headerFields = response.headerFields
+        headerFields[field] = value
+        return with(headerFields: headerFields)
     }
 
     public func contentType(_ value: String) -> Self {
@@ -121,7 +118,7 @@ extension Response {
 
 // MARK: - Send
 
-extension Response {
+extension OutgoingResponse {
 
     public func send(_ text: String) -> Self {
         return with(body: text)
@@ -167,10 +164,10 @@ extension Response {
 
     public func send() -> Self {
         if body == nil {
-            return with(statusCode: .noContent, body: "")
+            return with(status: .noContent, body: "")
         }
         if let body, body.isEmpty {
-            return with(statusCode: .noContent, body: "")
+            return with(status: .noContent, body: "")
         }
         return self
     }
@@ -178,7 +175,7 @@ extension Response {
 
 // MARK: - Redirect
 
-extension Response {
+extension OutgoingResponse {
 
     public func redirect(_ location: String, permanent: Bool = false) -> Self {
         return status(permanent ? .permanentRedirect : .temporaryRedirect)
@@ -189,11 +186,11 @@ extension Response {
 
 // MARK: - Cors
 
-extension Response {
+extension OutgoingResponse {
 
     public func cors(
         origin: String = "*",
-        methods: [HTTPMethod] = [.GET, .HEAD, .PUT, .PATCH, .POST, .DELETE, .QUERY],
+        methods: [HTTPRequest.Method] = [.get, .head, .put, .patch, .post, .delete],
         allowHeaders: [String]? = nil,
         allowCredentials: Bool? = nil,
         exposeHeaders: [String]? = nil,
@@ -210,7 +207,7 @@ extension Response {
 
 // MARK: - Cookie
 
-extension Response {
+extension OutgoingResponse {
 
     public enum CookieOption {
         public enum SameSite: String {
