@@ -1,6 +1,6 @@
 //
 //  VercelOutput.swift
-//  
+//
 //
 //  Created by Andrew Barba on 1/21/23.
 //
@@ -26,7 +26,8 @@ public struct VercelOutput {
         return encoder
     }
 
-    public init(packageManager: PackagePlugin.PackageManager, context: PackagePlugin.PluginContext, arguments: [String]) {
+    public init(packageManager: PackagePlugin.PackageManager, context: PackagePlugin.PluginContext, arguments: [String])
+    {
         self.packageManager = packageManager
         self.context = context
         self.arguments = arguments
@@ -55,7 +56,7 @@ public struct VercelOutput {
 
         var deployArguments = [
             "deploy",
-            "--prebuilt"
+            "--prebuilt",
         ]
 
         if arguments.contains("--prod") {
@@ -190,7 +191,8 @@ extension VercelOutput {
         }
 
         // Split file into lines
-        let lines = text
+        let lines =
+            text
             .split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -199,7 +201,8 @@ extension VercelOutput {
             guard !line.starts(with: "#") else { return }
 
             // Split the line into key value parts
-            let keyValue = line
+            let keyValue =
+                line
                 .split(separator: "=", maxSplits: 1)
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -383,7 +386,7 @@ extension VercelOutput {
             // Handle filesystem
             .init(handle: "filesystem"),
             // Proxy all other routes
-            .init(src: "^.*$", dest: product.name, check: true)
+            .init(src: "^.*$", dest: product.name, check: true),
         ]
         let config = OutputConfiguration(
             routes: routes,
@@ -442,7 +445,9 @@ extension VercelOutput {
             architecture: architecture,
             memory: .init(functionMemory),
             maxDuration: .init(functionDuration),
-            regions: functionRegions?.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            regions: functionRegions?.components(separatedBy: ",").map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
         )
         let data = try encoder.encode(config)
         fs.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
@@ -491,8 +496,10 @@ extension VercelOutput {
         try Shell.execute(
             executable: context.tool(named: "node").path,
             arguments: [
-                projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs"]).string,
-                port
+                projectDirectory.appending([
+                    ".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs",
+                ]).string,
+                port,
             ],
             environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string],
             printCommand: false
@@ -551,7 +558,8 @@ extension VercelOutput {
 
     private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
-        let baseImage = "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
+        let baseImage =
+            "swiftlang/swift:nightly-\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
 
         // build the product
         try Shell.execute(
@@ -563,7 +571,7 @@ extension VercelOutput {
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
                 baseImage,
-                "bash", "-cl", "swift build -c release -Xswiftc -Osize --static-swift-stdlib"
+                "bash", "-cl", "swift build -c release -Xswiftc -Osize --static-swift-stdlib",
             ]
         )
 

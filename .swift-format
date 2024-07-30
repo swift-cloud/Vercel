@@ -2,6 +2,7 @@
   "indentation" : {
     "spaces": 4
   },
+  "lineLength": 120,
   "tabWidth": 4,
   "version": 1
 }
