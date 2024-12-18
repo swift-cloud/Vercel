@@ -23,7 +23,7 @@ extension VaporHandler {
     }
 
     public static func setup(context: LambdaInitializationContext) async throws {
-        let app = Application(environment, .shared(context.eventLoop))
+        let app = try await Application.make(environment, .shared(context.eventLoop))
         // Request vapor application from user code
         try await configure(app: app)
         // Configure vercel server
