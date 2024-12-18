@@ -1,6 +1,6 @@
 //
 //  VercelServer.swift
-//  
+//
 //
 //  Created by Andrew Barba on 8/22/23.
 //
@@ -21,7 +21,7 @@ public final class VercelServer: Server {
         return app.eventLoopGroup.next().makeSucceededVoidFuture()
     }
 
-    public func start(hostname _: String?, port _: Int?) throws {
+    public func start(address: BindAddress?) throws {
         // do nothing and let the lambda runtime manage the http server
     }
 

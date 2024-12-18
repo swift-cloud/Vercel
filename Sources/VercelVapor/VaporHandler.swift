@@ -66,16 +66,10 @@ extension Vapor.Request {
             $0.add(name: $1.key, value: $1.value.value)
         }
 
-        var url: String = request.path
-
-        if request.searchParams.count > 0, let search = request.search {
-            url += "?\(search)"
-        }
-
         return try .init(
             application: app,
             method: .init(rawValue: request.method.rawValue),
-            url: .init(path: url),
+            url: .init(string: request.url.absoluteString),
             version: HTTPVersion(major: 1, minor: 1),
             headers: nioHeaders,
             collectedBody: buffer,
