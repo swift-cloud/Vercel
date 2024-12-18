@@ -1,6 +1,6 @@
 //
 //  VercelVapor.swift
-//  
+//
 //
 //  Created by Andrew Barba on 8/25/23.
 //

@@ -1,6 +1,6 @@
 //
 //  VercelOutput.swift
-//  
+//
 //
 //  Created by Andrew Barba on 1/21/23.
 //
@@ -26,7 +26,10 @@ public struct VercelOutput {
         return encoder
     }
 
-    public init(packageManager: PackagePlugin.PackageManager, context: PackagePlugin.PluginContext, arguments: [String]) {
+    public init(
+        packageManager: PackagePlugin.PackageManager, context: PackagePlugin.PluginContext,
+        arguments: [String]
+    ) {
         self.packageManager = packageManager
         self.context = context
         self.arguments = arguments
@@ -55,7 +58,7 @@ public struct VercelOutput {
 
         var deployArguments = [
             "deploy",
-            "--prebuilt"
+            "--prebuilt",
         ]
 
         if arguments.contains("--prod") {
@@ -113,7 +116,8 @@ public struct VercelOutput {
         print("-------------------------------------------------------------------------")
         print("")
         print("")
-        print("Reminder: In Xcode set the Run environment variable LOCAL_LAMBDA_SERVER_ENABLED=true")
+        print(
+            "Reminder: In Xcode set the Run environment variable LOCAL_LAMBDA_SERVER_ENABLED=true")
         print("")
         print("")
 
@@ -190,7 +194,8 @@ extension VercelOutput {
         }
 
         // Split file into lines
-        let lines = text
+        let lines =
+            text
             .split(separator: "\n")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -199,7 +204,8 @@ extension VercelOutput {
             guard !line.starts(with: "#") else { return }
 
             // Split the line into key value parts
-            let keyValue = line
+            let keyValue =
+                line
                 .split(separator: "=", maxSplits: 1)
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
 
@@ -210,7 +216,8 @@ extension VercelOutput {
             guard !keyValue[0].isEmpty else { return }
 
             // Validate value
-            guard keyValue[1].count >= 2, keyValue[1].hasPrefix("\""), keyValue[1].hasSuffix("\"") else { return }
+            guard keyValue[1].count >= 2, keyValue[1].hasPrefix("\""), keyValue[1].hasSuffix("\"")
+            else { return }
 
             // Get key and value
             let key = String(keyValue[0])
@@ -276,10 +283,13 @@ extension VercelOutput {
         // Clean the vercel output directory
         try? fs.removeItem(atPath: vercelOutputDirectory.string)
         // Create new directories
-        try fs.createDirectory(atPath: vercelOutputDirectory.string, withIntermediateDirectories: true)
-        try fs.createDirectory(atPath: vercelFunctionsDirectory.string, withIntermediateDirectories: true)
+        try fs.createDirectory(
+            atPath: vercelOutputDirectory.string, withIntermediateDirectories: true)
+        try fs.createDirectory(
+            atPath: vercelFunctionsDirectory.string, withIntermediateDirectories: true)
         // Create directories for each product
-        try fs.createDirectory(atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
+        try fs.createDirectory(
+            atPath: vercelFunctionDirectory(product).string, withIntermediateDirectories: true)
     }
 }
 
@@ -379,11 +389,13 @@ extension VercelOutput {
         let vercel = vercelConfiguration()
         let routes: [OutputConfiguration.Route] = [
             // Remove trailing slash
-            .init(src: "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$", headers: ["Location": "/$1"], status: 308),
+            .init(
+                src: "^(?:/((?:[^/]+?)(?:/(?:[^/]+?))*))/$", headers: ["Location": "/$1"],
+                status: 308),
             // Handle filesystem
             .init(handle: "filesystem"),
             // Proxy all other routes
-            .init(src: "^.*$", dest: product.name, check: true)
+            .init(src: "^.*$", dest: product.name, check: true),
         ]
         let config = OutputConfiguration(
             routes: routes,
@@ -442,7 +454,9 @@ extension VercelOutput {
             architecture: architecture,
             memory: .init(functionMemory),
             maxDuration: .init(functionDuration),
-            regions: functionRegions?.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            regions: functionRegions?.components(separatedBy: ",").map {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+            }
         )
         let data = try encoder.encode(config)
         fs.createFile(atPath: vercelFunctionConfigurationPath(product).string, contents: data)
@@ -491,8 +505,11 @@ extension VercelOutput {
         try Shell.execute(
             executable: context.tool(named: "node").path,
             arguments: [
-                projectDirectory.appending([".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server", "server.cjs"]).string,
-                port
+                projectDirectory.appending([
+                    ".build", "checkouts", "Vercel", "Plugins", "VercelPackager", "Server",
+                    "server.cjs",
+                ]).string,
+                port,
             ],
             environment: ["SWIFT_PROJECT_DIRECTORY": projectDirectory.string],
             printCommand: false
@@ -530,7 +547,8 @@ extension VercelOutput {
         var parameters = PackageManager.BuildParameters()
         parameters.configuration = .release
         parameters.otherLinkerFlags = ["-S"]
-        parameters.otherSwiftcFlags = Utils.isAmazonLinux ? ["-static-stdlib", "-Osize"] : ["-Osize"]
+        parameters.otherSwiftcFlags =
+            Utils.isAmazonLinux ? ["-static-stdlib", "-Osize"] : ["-Osize"]
         parameters.logging = .concise
 
         let result = try packageManager.build(
@@ -551,7 +569,8 @@ extension VercelOutput {
 
     private func buildDockerProduct(_ product: Product) async throws -> Path {
         let dockerToolPath = try context.tool(named: "docker").path
-        let baseImage = "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
+        let baseImage =
+            "swift:\(context.package.toolsVersion.major).\(context.package.toolsVersion.minor)-amazonlinux2"
 
         // build the product
         try Shell.execute(
@@ -563,7 +582,7 @@ extension VercelOutput {
                 "-v", "\(context.package.directory.string):/workspace",
                 "-w", "/workspace",
                 baseImage,
-                "bash", "-cl", "swift build -c release --static-swift-stdlib"
+                "bash", "-cl", "swift build -c release --static-swift-stdlib",
             ]
         )
 
@@ -609,8 +628,12 @@ public enum BuildError: Error, CustomStringConvertible {
 extension PackageManager.BuildResult {
 
     // Find the executable produced by the build
-    public func executableArtifact(for product: Product) -> PackageManager.BuildResult.BuiltArtifact? {
-        let executables = self.builtArtifacts.filter { $0.kind == .executable && $0.path.lastComponent == product.name }
+    public func executableArtifact(for product: Product) -> PackageManager.BuildResult
+        .BuiltArtifact?
+    {
+        let executables = self.builtArtifacts.filter {
+            $0.kind == .executable && $0.path.lastComponent == product.name
+        }
         guard !executables.isEmpty else {
             return nil
         }

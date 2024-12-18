@@ -16,7 +16,9 @@ public enum Architecture: String, Codable {
 public struct Utils {
 
     public static var isAmazonLinux: Bool {
-        if let data = FileManager.default.contents(atPath: "/etc/system-release"), let release = String(data: data, encoding: .utf8) {
+        if let data = FileManager.default.contents(atPath: "/etc/system-release"),
+            let release = String(data: data, encoding: .utf8)
+        {
             return release.hasPrefix("Amazon Linux")
         } else {
             return false

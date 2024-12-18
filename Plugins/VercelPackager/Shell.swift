@@ -1,6 +1,6 @@
 //
 //  Shell.swift
-//  
+//
 //
 //  Created by Andrew Barba on 1/21/23.
 //
@@ -10,7 +10,7 @@ import Foundation
 import PackagePlugin
 
 #if canImport(Glibc)
-import Glibc
+    import Glibc
 #endif
 
 private let globalSource = DispatchSource.makeSignalSource(signal: SIGINT)
@@ -59,7 +59,11 @@ public struct Shell {
             outputSync.enter()
             defer { outputSync.leave() }
 
-            guard let _output = data.flatMap({ String(data: $0, encoding: .utf8)?.trimmingCharacters(in: CharacterSet(["\n"])) }), !_output.isEmpty else {
+            guard
+                let _output = data.flatMap({
+                    String(data: $0, encoding: .utf8)?.trimmingCharacters(in: CharacterSet(["\n"]))
+                }), !_output.isEmpty
+            else {
                 return
             }
 
@@ -71,7 +75,9 @@ public struct Shell {
         }
 
         let pipe = Pipe()
-        pipe.fileHandleForReading.readabilityHandler = { fileHandle in outputQueue.async { outputHandler(fileHandle.availableData) } }
+        pipe.fileHandleForReading.readabilityHandler = { fileHandle in
+            outputQueue.async { outputHandler(fileHandle.availableData) }
+        }
 
         process.standardOutput = pipe
         process.standardError = pipe
@@ -94,7 +100,8 @@ public struct Shell {
         outputSync.wait()
 
         if process.terminationStatus != 0 {
-            throw ShellError.processFailed([executable.string] + arguments, process.terminationStatus)
+            throw ShellError.processFailed(
+                [executable.string] + arguments, process.terminationStatus)
         }
 
         return output
